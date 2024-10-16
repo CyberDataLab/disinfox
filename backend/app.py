@@ -9,8 +9,8 @@ app = Flask(__name__)
 NAMESPACE_UUID = UUID('12345678-1234-5678-1234-567812345678')
 # Load the DISARM STIX2 objects from boundle
 disarm_stix2 = []
-with open('DISARM.json') as f:
-    disarm_stix2 = parse(f.read(), allow_custom=True).objects()
+with open('data/DISARM.json') as f:
+    disarm_stix2 = parse(f.read(), allow_custom=True)
 if not disarm_stix2:
     print("DISARM.json is empty or invalid")
 
