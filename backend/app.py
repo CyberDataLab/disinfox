@@ -77,7 +77,8 @@ def build_stix_objects(incident_data, disarm_stix2):
         # Search in the DISARM dictionary, the STIX ID of the technique to create the relationship
         technique_id = None
         for stix_object in disarm_stix2:
-            if (stix_object["x_mitre_id"]== technique_disarm_id):
+            mitre_id = stix_object.get("x_mitre_id")
+            if (mitre_id and mitre_id == technique_disarm_id):
                     technique_objects.append(stix_object)
                     break
         if not technique_objects:
