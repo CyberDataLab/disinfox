@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block head %}
+<!-- Tom Select installation -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<form method="POST" action="{{ url_for('new_incident') }}">
+    <div class="mb-3">
+        <label for="title" class="form-label">Incident name</label>
+        <input type="text" class="form-control" id="title" name="title" aria-describedby="title">
+        <div id="emailHelp" class="form-text">Descriptive name.</div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description"></textarea>
+    </div>
+    
+    <div class="mb-3">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" class="form-control" id="date" name="date">
+    </div>
+    
+    <div class="mb-3">
+        <label for="target_countries" class="form-label">Target countries</label>
+        <select id="target_countries" name="target_countries" multiple placeholder="Select countries...">
+            <option value="country1">Country 1</option>
+            <option value="country2">Country 2</option>
+            <option value="country3">Country 3</option>
+            <!-- Additional options -->
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="threat_actors" class="form-label">Threat actors</label>
+        <select id="threat_actors" name="threat_actors" multiple placeholder="Start typing to search..."></select>
+    </div>
+    
+    <div class="mb-3">
+        <label for="techniques" class="form-label">Techniques</label>
+        
+    </div>
+
+    <div class="mb-3">
+        <label for="sources" class="form-label">Sources</label>
+        <select id="sources" name="sources" multiple placeholder="Select sources...">
+            <option value="source1">Source 1</option>
+            <option value="source2">Source 2</option>
+            <option value="source3">Source 3</option>
+            <!-- Additional options -->
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Tom Select for multi-select fields
+    document.addEventListener('DOMContentLoaded', function () {
+        new TomSelect('#target_countries', {
+            create: false,
+            plugins: ['remove_button'],
+        });
+
+        // Initialize for threat actors with remote search
+        new TomSelect('#threat_actors', {
+            create: false,
+            plugins: ['remove_button'],
+            load: function (query, callback) {
+                if (!query.length) return callback();
+                // Fetch data from your database using AJAX
+                fetch(`{{ url_for('get_threat_actors') }}?query=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Assuming data is an array of strings
+                        // Prepare options
+                        const options = data.map(actor => ({ value: actor, text: actor }));
+
+                        // Add a custom option if the input doesn't match existing ones
+                        if (!data.find(actor => actor.toLowerCase() === query.toLowerCase())) {
+                            options.push({ value: query, text: query });
+                        }
+
+                        callback(options);
+                    })
+                    .catch(() => {
+                        callback();
+                    });
+            },
+        });
+
+        // Initialize for sources
+        new TomSelect('#sources', {
+            create: false,
+            plugins: ['remove_button'],
+        });
+    });
+</script>
+{% endblock %}
