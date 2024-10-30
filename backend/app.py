@@ -1,20 +1,38 @@
 from flask import Flask, request, jsonify
 from stix2 import parse, ThreatActor, Location, IntrusionSet, Relationship
 from uuid import uuid5, UUID
-import config
+from pymongo import MongoClient
+from dotenv import load_dotenv
+from os import environ, path
+import json
 
+DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
+
+load_dotenv()
 app = Flask(__name__)
 
+# Create a mongoDB connection with the .env file. variables: host, port, username, password, db
+client = MongoClient(environ.get("MONGODB_HOST"), int(environ.get("MONGODB_PORT")), username=environ.get("MONGODB_USERNAME"), password=environ.get("MONGODB_PASSWORD"))
+db = client[environ.get("MONGODB_DB")]
+# Collection to store the STIX2 objects
+stix2_objects = db['stix2_objects']
 
 NAMESPACE_UUID = UUID('12345678-1234-5678-1234-567812345678')
 # Load the DISARM STIX2 objects from boundle
 disarm_stix2 = []
-with open('data/DISARM.json') as f:
+with open(DISARM_MATRIX_PATH, 'r') as f:
     disarm_stix2 = parse(f.read(), allow_custom=True)
 if not disarm_stix2:
     print("DISARM.json is empty or invalid")
+    exit(1)
 
 disarm_stix2 = disarm_stix2['objects'] # Get the objects from the bundle
+
+
+# Root informative endpoint
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "Welcome to the DISINFOX API. Check the documentation to see the available endpoints"}), 200
 
 # Incident upload endpoint
 @app.route('/incidents', methods=['POST'])
@@ -22,11 +40,21 @@ def save_incident():
     # Map the JSON fields (non STIX) and build the STIX2 objects and relationships
     incident_data = request.json
     stix_objects = build_stix_objects(incident_data, disarm_stix2)
-    print(stix_objects)
+    # Save the serialized STIX2 objects in the database as a document
+    for stix_object in stix_objects:
+        serialized = stix_object.serialize()
+        stix2_objects.insert_one(json.loads(serialized))
+
     return jsonify({"message": "Incident saved successfully"}), 201
 
 
-
+# Get all the incidents stored in the database
+@app.route('/incidents', methods=['GET'])
+def get_incidents():
+    incidents = []
+    for incident in stix2_objects.find():
+        incidents.append(incident)
+    return jsonify(incidents), 200
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
 'first_seen': seen_date,
@@ -77,8 +105,11 @@ def build_stix_objects(incident_data, disarm_stix2):
         # Search in the DISARM dictionary, the STIX ID of the technique to create the relationship
         technique_id = None
         for stix_object in disarm_stix2:
-            mitre_id = stix_object.get("x_mitre_id")
-            if (mitre_id and mitre_id == technique_disarm_id):
+            if (stix_object["type"]!="attack-pattern"):
+                continue
+            mitre_id = stix_object.get("external_references")[0].get("external_id")
+            print(mitre_id)
+            if (mitre_id and mitre_id == technique_disarm_id.split(": ")[0]):
                     technique_objects.append(stix_object)
                     break
         if not technique_objects:
