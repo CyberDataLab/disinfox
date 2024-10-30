@@ -28,10 +28,9 @@
     <div class="mb-3">
         <label for="target_countries" class="form-label">Target countries</label>
         <select id="target_countries" name="target_countries" multiple placeholder="Select countries...">
-            <option value="country1">Country 1</option>
-            <option value="country2">Country 2</option>
-            <option value="country3">Country 3</option>
-            <!-- Additional options -->
+            {% for country in countries %}
+            <option value="{{ country }}">{{ country }}</option>
+            {% endfor %}
         </select>
     </div>
     
@@ -42,7 +41,11 @@
     
     <div class="mb-3">
         <label for="techniques" class="form-label">Techniques</label>
-        
+        <select id="techniques" name="techniques" multiple placeholder="Select techniques...">
+            {% for technique in techniques %}
+            <option value="{{ technique.disarm_id }}">[{{ technique.disarm_id }}] {{ technique.name }}</option>
+            {% endfor %}
+        </select>
     </div>
 
     <div class="mb-3">
@@ -67,7 +70,10 @@
             create: false,
             plugins: ['remove_button'],
         });
-
+        new TomSelect('#techniques', {
+            create: false,
+            plugins: ['remove_button'],
+        });
         // Initialize for threat actors with remote search
         new TomSelect('#threat_actors', {
             create: false,

@@ -1,13 +1,17 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 import pycountry
+import os
+import json
 
 app = Flask(__name__)
 
-BACKEND_ROOT = "http://backend:5000/"
+BACKEND_ROOT = "http://localhost:5001/"
+DISARM_MATRIX_PATH = os.path.join(os.path.dirname(__file__), "data", "DISARM.json")
+
 
 app.logger.info("Starting DISINFOX frontend...")
-app.logger.info("Connecting with DISINFOX backend...", end="")
+app.logger.info("Connecting with DISINFOX backend at " + BACKEND_ROOT)
 alive = False
 try:
     response = requests.get(BACKEND_ROOT)
@@ -15,7 +19,33 @@ try:
         alive = True
 except:
     pass
-app.logger.info("OK" if alive else "FAILED")
+if not alive:
+    app.logger.error("FAILED")
+    exit(1)
+
+app.logger.info("Getting the DISARM matrix from file from " + DISARM_MATRIX_PATH)
+techniques = []
+try:
+    with open(DISARM_MATRIX_PATH, "r") as f:
+        '''
+        transforming {"objects": [{ "type": "attack-pattern", "id": "attack-pattern--21fc4", ..., "external_references": [{"external_id": "T0014"}
+        to [{"id": "attack-pattern--T0014", name": "Spearphishing Attachment", disarm_id: "T0014", description: "A threat actor "}]
+        '''
+        disarm_stix2 = json.loads(f.read())
+        for obj in disarm_stix2["objects"]:
+            if obj["type"] == "attack-pattern":
+                technique = {}
+                technique["id"] = obj["id"]
+                technique["name"] = obj["name"]
+                technique["disarm_id"] = obj["external_references"][0]["external_id"]
+                technique["description"] = obj["description"]
+                techniques.append(technique)
+except:
+    pass
+if not techniques:
+    app.logger.error("FAILED")
+    exit(1)
+
 
 available_countries = [country.name for country in pycountry.countries]
 
@@ -34,7 +64,7 @@ def incidents():
 @app.route("/incidents/new", methods=["GET", "POST"])
 def new_incident():
     if request.method == "GET":
-        return render_template("incidents_new.html", countries=available_countries)
+        return render_template("incidents_new.html", countries=available_countries, techniques=techniques)
     
     # process the form data
 
