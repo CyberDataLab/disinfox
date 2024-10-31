@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for
 from stix2 import parse, ThreatActor, Location, IntrusionSet, Relationship
 from uuid import uuid5, UUID
 from pymongo import MongoClient
@@ -48,13 +48,48 @@ def save_incident():
     return jsonify({"message": "Incident saved successfully"}), 201
 
 
-# Get all the incidents stored in the database
+# Get all the incidents stored in the database with pagination and HATEOAS
 @app.route('/incidents', methods=['GET'])
 def get_incidents():
-    incidents = []
-    for incident in stix2_objects.find():
-        incidents.append(incident)
-    return jsonify(incidents), 200
+    page = request.args.get('page', default=1, type=int)
+    limit = request.args.get('limit', default=10, type=int)
+
+    # Query to fetch only "intrusion-set" type incidents
+    total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
+    incidents_cursor = stix2_objects.find({"type": "intrusion-set"})
+    
+    # Apply pagination
+    incidents = list(incidents_cursor.skip((page - 1) * limit).limit(limit))
+    # Remove the _id field from the documents
+    for incident in incidents:
+        incident.pop('_id', None)
+
+
+
+    # Construct HATEOAS links
+    def build_url(page):
+        return url_for('get_incidents', page=page, limit=limit, _external=True)
+
+    # Pagination links
+    links = {
+        "self": build_url(page),
+        "next": build_url(page + 1) if (page * limit) < total_incidents else None,
+        "prev": build_url(page - 1) if page > 1 else None,
+        "first": build_url(1),
+        "last": build_url((total_incidents // limit) + (1 if total_incidents % limit > 0 else 0))
+    }
+
+    # Return a JSON response with incidents and pagination links
+    return jsonify({
+        "incidents": incidents,
+        "page": page,
+        "limit": limit,
+        "total_incidents": total_incidents,
+        "links": links
+    }), 200
+
+
+
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
 'first_seen': seen_date,
