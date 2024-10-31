@@ -21,11 +21,11 @@ Incidents listing...
         {% for incident in incidents %}
         <tr>
             <th scope="row">{{ loop.index }}</th>
-            <td>{{ incident.title }}</td>
+            <td>{{ incident.name }}</td>
             <td>{{ incident.description }}</td>
             <td>{{ incident.date }}</td>
         </tr>
         {% endfor %}
     </tbody>
-    
+
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import requests
 import pycountry
 import os
@@ -54,7 +54,14 @@ def home():
     return render_template("index.html")
 
 def get_incidents_from_back():
-    return []
+    incidents = []
+    try:
+        response = requests.get(BACKEND_ROOT + "incidents")
+        if response.status_code == 200:
+            incidents = response.json()["incidents"]
+    except:
+        pass
+    return incidents
 
 @app.route("/incidents", methods=["GET"])
 def incidents():
@@ -66,11 +73,22 @@ def new_incident():
     if request.method == "GET":
         return render_template("incidents_new.html", countries=available_countries, techniques=techniques)
     
-    # process the form data
+    # check if the fields are filled
+    if not request.form["event"] or not request.form["event_description"] or not request.form["target_countries"] or not request.form["techniques"] or not request.form["sources"]:
+        return "Please fill all the fields: title, description, countries, technique, sources", 400
 
-    app.logger.info("Incident saved successfully"+ str(request.form))
-    return "OK"
+    backend_request = request.form.to_dict(flat=False)
+    backend_request["event"] = backend_request["event"][0]
+    backend_request["event_description"] = backend_request["event_description"][0]
+    backend_request["date"] = backend_request["date"][0]
+    response = requests.post(BACKEND_ROOT + "incidents", json=backend_request)
+    if response.status_code == 201:
+        # redirect to the incidents page and alert the user
+        return  redirect(url_for("incidents"), code=302)
+    else:
+        return "Error creating incident", 500
     
+
 
     
 @app.route('/api/threat-actors', methods=['GET'])
