@@ -3,7 +3,7 @@
 
 {% block content %}
 
-Incidents listing...
+<h1>Incidents</h1>
 <p> There are currently {{ incidents|length }} incidents in the database.</p>
 <a href="{{ url_for('new_incident') }}" class="btn btn-primary">Add new incident</a>
 
@@ -27,5 +27,6 @@ Incidents listing...
         </tr>
         {% endfor %}
     </tbody>
+</table>
 
 {% endblock %}
