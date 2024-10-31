@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% from 'bootstrap5/form.html' import render_form %}
+
 {% block head %}
 <!-- Tom Select installation -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css">
@@ -7,60 +9,40 @@
 {% endblock %}
 
 {% block content %}
+<div class="mt-5">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" id="formTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="incident-tab" data-bs-toggle="tab" href="#incident" role="tab" aria-controls="incident" aria-selected="true">📋 Incident Form</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="other-tab" data-bs-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false">📤 STIX2 bundle</a>
+        </li>
+    </ul>
 
-<form method="POST" action="{{ url_for('new_incident') }}">
-    <div class="mb-3">
-        <label for="title" class="form-label">Incident name</label>
-        <input type="text" class="form-control" id="event" name="event" aria-describedby="title">
-        <div id="emailHelp" class="form-text">Descriptive name.</div>
+    <!-- Tab content -->
+    <div class="tab-content" id="formTabsContent">        <!-- Incident Form Tab -->
+        <div class="tab-pane fade show active" id="incident" role="tabpanel" aria-labelledby="incident-tab">
+            <p class="mt-3">Please fill out the form below to report a new incident.</p>
+            <p class="text-muted">Fields marked with <span class="text-danger">*</span> are required.</p>
+            <form method="POST" action="{{ url_for('new_incident') }}">
+                {{ incident_form.hidden_tag() }}
+                {{ render_form(incident_form) }}
+            </form>
+        </div>
+        
+        <!-- Other Form Tab -->
+        <div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
+            <p class="mt-3">Alternatively, you can upload a bulk bundle of incidents following the STIX format.</p>
+            <form method="POST" action="{{ url_for('new_incident') }}">
+                {{ file_form.hidden_tag() }}
+                {{ render_form(file_form) }}
+            </form>
+        </div>
     </div>
-    
-    <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <textarea class="form-control" id="event_description" name="event_description"></textarea>
-    </div>
-    
-    <div class="mb-3">
-        <label for="date" class="form-label">Date</label>
-        <input type="date" class="form-control" id="date" name="date">
-    </div>
-    
-    <div class="mb-3">
-        <label for="target_countries" class="form-label">Target countries</label>
-        <select id="target_countries" name="target_countries" multiple placeholder="Select countries...">
-            {% for country in countries %}
-            <option value="{{ country }}">{{ country }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    
-    <div class="mb-3">
-        <label for="threat_actors" class="form-label">Threat actors</label>
-        <select id="threat_actors" name="threat_actors" multiple placeholder="Start typing to search..."></select>
-    </div>
-    
-    <div class="mb-3">
-        <label for="techniques" class="form-label">Techniques</label>
-        <select id="techniques" name="techniques" multiple placeholder="Select techniques...">
-            {% for technique in techniques %}
-            <option value="{{ technique.disarm_id }}">[{{ technique.disarm_id }}] {{ technique.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label for="sources" class="form-label">Sources</label>
-        <select id="sources" name="sources" multiple placeholder="Select sources...">
-            <option value="source1">Source 1</option>
-            <option value="source2">Source 2</option>
-            <option value="source3">Source 3</option>
-            <!-- Additional options -->
-        </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-
+</div>
 {% endblock %}
+
 
 {% block scripts %}
 <script>

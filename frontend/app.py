@@ -3,8 +3,14 @@ import requests
 import pycountry
 import os
 import json
+from flask_bootstrap import Bootstrap5
+from forms import IncidentForm, FileUploadForm
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "secretkey"
+bootstrap = Bootstrap5(app)
+
+
 
 BACKEND_ROOT = "http://localhost:5001/"
 DISARM_MATRIX_PATH = os.path.join(os.path.dirname(__file__), "data", "DISARM.json")
@@ -70,8 +76,10 @@ def incidents():
     
 @app.route("/incidents/new", methods=["GET", "POST"])
 def new_incident():
+    incident_form = IncidentForm()
+    file_form = FileUploadForm()
     if request.method == "GET":
-        return render_template("incidents_new.html", countries=available_countries, techniques=techniques)
+        return render_template("incidents_new.html", countries=available_countries, techniques=techniques, incident_form=incident_form, file_form=file_form)
     
     # check if the fields are filled
     if not request.form["event"] or not request.form["event_description"] or not request.form["target_countries"] or not request.form["techniques"] or not request.form["sources"]:
