@@ -1,8 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-center"></div>
-    <a href="{{ url_for('incidents') }}" class="btn btn-primary mx-2">Endpoint 1</a>
-    <a href="{{ url_for('developers') }}" class="btn btn-secondary mx-2">Endpoint 2</a>
+<!-- All blocks down each other -->
+<div class="text-center mt-5">
+    <div>
+    </div>
+    <div class="container">
+        <!-- Huge word size for a emoji-->
+        <h1 class="display-1">🦊</h1>
+        <h2>Welcome to the DISINFOX Threat Exchange Platform</h2>
+        <p class="lead">This platform allows you to report and share cyber disinformation incidents.</p>
+    </div>
+
+    <div>
+        <p class="lead">What would you like to do?</p>
+        <a href="{{ url_for('new_incident') }}" class="btn btn-success mx-2">📋 Report a new incident</a>
+        <a href="{{ url_for('incidents') }}" class="btn btn-primary mx-2">🚨 See the listing</a>
+        <a href="{{ url_for('developers') }}" class="btn btn-secondary mx-2">💻 I'm a CTI developer!</a>
+    </div>
 </div>
 {% endblock %}
