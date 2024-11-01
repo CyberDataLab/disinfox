@@ -1,2 +1,1 @@
-# disinfox
-DISINFOX (Centralized Box of Disinformation Incidents)
+# DISINFOX (Centralized Box of Disinformation Incidents)
