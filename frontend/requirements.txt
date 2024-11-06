@@ -1,0 +1,6 @@
+Flask==3.0.3
+Bootstrap-Flask==2.4.1
+flask_wtf==1.2.2
+pycountry==24.6.1
+Requests==2.32.3
+WTForms==3.2.1

@@ -12,7 +12,7 @@ bootstrap = Bootstrap5(app)
 
 
 
-BACKEND_ROOT = "http://localhost:5001/"
+BACKEND_ROOT = f"http://{os.environ.get('BACKEND_HOST', 'localhost')}:{os.environ.get('BACKEND_PORT', '5000')}/"
 DISARM_MATRIX_PATH = os.path.join(os.path.dirname(__file__), "data", "DISARM.json")
 
 
