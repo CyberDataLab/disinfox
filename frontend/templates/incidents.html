@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
-
 {% block content %}
 
 <h1>Incidents</h1>
@@ -15,6 +14,7 @@
             <th scope="col">Incident name</th>
             <th scope="col">Description</th>
             <th scope="col">Date</th>
+            <th scope="col">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -24,9 +24,88 @@
             <td>{{ incident.name }}</td>
             <td>{{ incident.description }}</td>
             <td>{{ incident.date }}</td>
+            <td>
+                <!-- Button to trigger modal -->
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#incidentModal"
+                        onclick="loadIncidentDetails('{{ incident.id }}')">
+                    Details
+                </button>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
+<!-- Modal for incident details -->
+<div class="modal fade" id="incidentModal" tabindex="-1" aria-labelledby="incidentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="incidentModalLabel">Incident Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Incident Name:</strong> <span id="incidentName"></span></p>
+                <p><strong>Description:</strong> <span id="incidentDescription"></span></p>
+                <p><strong>Date:</strong> <span id="incidentDate"></span></p>
+                <!-- Dynamic fields populated by AJAX -->
+                <p><strong>Location:</strong> <span id="incidentLocations"></span></p>
+                <p><strong>Threat Actor:</strong> <span id="incidentThreatActors"></span></p>
+                <p><strong>Relationships:</strong> <span id="incidentRelationships"></span></p>
+                <p><strong>Raw STIX2:</strong> 
+                    <pre><code id="incidentRawStix2"></code></pre>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Function to load incident details dynamically
+function loadIncidentDetails(incidentId) {
+    // Clear previous content in the modal
+    document.getElementById("incidentName").innerText = "";
+    document.getElementById("incidentDescription").innerText = "";
+    document.getElementById("incidentDate").innerText = "";
+    document.getElementById("incidentLocations").innerText = "";
+    document.getElementById("incidentThreatActors").innerText = "";
+    document.getElementById("incidentRelationships").innerText = "";
+    document.getElementById("incidentRawStix2").innerText = "";
+
+    // AJAX request to get additional incident details
+    fetch(`/incidents/${incidentId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate modal fields with the data from the response
+            // The data is an STIX2 bundle with several objects (incident, location, threat actor, etc.) representing the incident
+            for (const object of data.bundle.objects) {
+                console.log(object);
+                if (object.type === "intrusion-set") {
+                    document.getElementById("incidentName").innerText = object.name;
+                    document.getElementById("incidentDescription").innerText = object.description;
+                    document.getElementById("incidentDate").innerText = object.created;
+                } else if (object.type === "location") {
+                    document.getElementById("incidentLocations").innerText += `${object.name} | `;
+                } else if (object.type === "threat-actor") {
+                    document.getElementById("incidentThreatActors").innerText += `${object.name} | `;
+                } else if (object.type === "relationship") {
+                    document.getElementById("incidentRelationships").innerText += `${object.source_ref} -> ${object.target_ref}\n`;
+                }
+            }
+            // Display the raw STIX2 bundle for reference
+            document.getElementById("incidentRawStix2").innerText = JSON.stringify(data.bundle, null, 2);
+
+
+        })
+        .catch(error => {
+            console.error("Error fetching incident details:", error);
+        });
+}
+</script>
 {% endblock %}

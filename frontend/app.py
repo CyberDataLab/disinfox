@@ -13,7 +13,6 @@ bootstrap = Bootstrap5(app)
 
 
 BACKEND_ROOT = f"http://{os.environ.get('BACKEND_HOST', 'localhost')}:{os.environ.get('BACKEND_PORT', '5000')}/"
-DISARM_MATRIX_PATH = os.path.join(os.path.dirname(__file__), "data", "DISARM.json")
 
 
 app.logger.info("Starting DISINFOX frontend...")
@@ -29,31 +28,9 @@ if not alive:
     app.logger.error("FAILED")
     exit(1)
 
-app.logger.info("Getting the DISARM matrix from file from " + DISARM_MATRIX_PATH)
-techniques = []
-try:
-    with open(DISARM_MATRIX_PATH, "r") as f:
-        '''
-        transforming {"objects": [{ "type": "attack-pattern", "id": "attack-pattern--21fc4", ..., "external_references": [{"external_id": "T0014"}
-        to [{"id": "attack-pattern--T0014", name": "Spearphishing Attachment", disarm_id: "T0014", description: "A threat actor "}]
-        '''
-        disarm_stix2 = json.loads(f.read())
-        for obj in disarm_stix2["objects"]:
-            if obj["type"] == "attack-pattern":
-                technique = {}
-                technique["id"] = obj["id"]
-                technique["name"] = obj["name"]
-                technique["disarm_id"] = obj["external_references"][0]["external_id"]
-                technique["description"] = obj["description"]
-                techniques.append(technique)
-except:
-    pass
-if not techniques:
-    app.logger.error("FAILED")
-    exit(1)
 
 
-available_countries = [country.name for country in pycountry.countries]
+
 
 @app.route("/", methods=["GET"])
 def home():
@@ -73,17 +50,48 @@ def get_incidents_from_back():
 def incidents():
     incidents = get_incidents_from_back()
     return render_template("incidents.html", incidents=incidents)
+
+@app.route("/incidents/<incident_id>", methods=["GET"])
+def incident(incident_id):
+    incident_stix_bundle = {}
+    try:
+        response = requests.get(BACKEND_ROOT + f"incidents/{incident_id}")
+        if response.status_code == 200:
+            app.logger.info(response.json())
+            incident_stix_bundle = response.json()
+    except:
+        pass
+    json_response = incident_stix_bundle
+    # json_response = {}
+    # for stix_object in incident["bundle"]["objects"]:
+    #     if stix_object["type"] == "location":
+    #         json_response["location"] = stix_object.get("name", "")
+    #     elif stix_object["type"] == "threat-actor":
+    #         json_response["threat_actor"] = stix_object.get("name", "")
+    # json_response["raw_stix2"] = incident
+
+    return jsonify(json_response), 200
     
 @app.route("/incidents/new", methods=["GET", "POST"])
 def new_incident():
     incident_form = IncidentForm()
     file_form = FileUploadForm()
     if request.method == "GET":
-        return render_template("incidents_new.html", countries=available_countries, techniques=techniques, incident_form=incident_form, file_form=file_form)
+        return render_template("incidents_new.html", incident_form=incident_form, file_form=file_form)
     
-    # check if the fields are filled
-    if not request.form["event"] or not request.form["event_description"] or not request.form["target_countries"] or not request.form["techniques"] or not request.form["sources"]:
-        return "Please fill all the fields: title, description, countries, technique, sources", 400
+    # detect if the submit form was the file upload form or the incident form
+    if "file" in request.files:
+        if file_form.validate_on_submit():
+            file = file_form.file.data
+            filename = file.filename
+            file.save(os.path.join("uploads", filename))
+            return "File uploaded successfully", 200
+        else:
+            return "Error uploading file", 500
+
+    # get jsoned form data
+    form = incident_form.data
+    app.logger.info(form)   
 
     backend_request = request.form.to_dict(flat=False)
     backend_request["event"] = backend_request["event"][0]

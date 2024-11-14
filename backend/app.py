@@ -88,6 +88,42 @@ def get_incidents():
         "links": links
     }), 200
 
+@app.route('/incidents/<incident_id>', methods=['GET'])
+def get_incident(incident_id):
+    related_objects = []
+
+    # Fetch the incident from the database
+    incident = stix2_objects.find_one({"id": incident_id})
+    app.logger.info(f"Fetching incident {incident_id}. Found: {incident}")
+    if not incident:
+        return jsonify({"message": "Incident not found"}), 404
+    incident.pop('_id', None)
+    related_objects.append(incident)
+
+    # We get the relationships that contain the incident as source or target
+    relationships = stix2_objects.find({"$or": [{"source_ref": incident_id}, {"target_ref": incident_id}]})
+    # Get the other objects related to the incident
+    for relationship in relationships:
+        app.logger.info(f"Appending relationship: {relationship['id']}")
+        # Just search the objects that are not already in the related_objects list (we alredy appended them)
+        # Degug this
+        app.logger.info(f"Checking if {relationship['source_ref']} is in related_objects: {any(obj['id'] == relationship['source_ref'] for obj in related_objects)}")
+        if relationship["source_ref"] and not any(obj["id"] == relationship["source_ref"] for obj in related_objects):
+            source_obj = stix2_objects.find_one({"id": relationship["source_ref"]})
+            source_obj.pop('_id', None)
+            related_objects.append(source_obj)
+        app.logger.info(f"Checking if {relationship['target_ref']} is in related_objects: {any(obj['id'] == relationship['target_ref'] for obj in related_objects)}")
+        if relationship["target_ref"] and not any(obj["id"] == relationship["target_ref"] for obj in related_objects):
+            target_obj = stix2_objects.find_one({"id": relationship["target_ref"]})
+            target_obj.pop('_id', None)
+            related_objects.append(target_obj)
+
+    return jsonify({
+        "bundle": {
+            "objects": related_objects
+        }
+    }), 200
+
 
 
 '''
@@ -132,6 +168,7 @@ def build_stix_objects(incident_data, disarm_stix2):
             name=country_name,
             country=country
         )
+        location_objects.append(country_object)
 
     # Get the techniques (DISARM) associated with this incident
     technique_objects = []
