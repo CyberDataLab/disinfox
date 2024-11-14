@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from os import environ, path
 import json
+from mfulde_dataset_parser import parse_csv_string
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 
@@ -124,7 +125,29 @@ def get_incident(incident_id):
         }
     }), 200
 
+@app.route('/bulk-incident', methods=['POST'])
+def save_bulk_incidents():
+    # Here JSON with a list of incidents or a CSV file with the incidents can be uploaded (it comes from a form)
+    ftype = request.files['file'].content_type
+    app.logger.info(f"Received file with content type: {ftype}")
+    # If CSV (content-type: text/csv) we parse the CSV and build the STIX2 objects
+    if ftype == 'text/csv':
+        csv_string = request.files['file'].read().decode('utf-8')
+        app.logger.info(f"Received CSV: {csv_string}")
+        incidents = parse_csv_string(csv_string)
+    elif ftype == 'application/json':
+        incidents = request.json
+    else:
+        return jsonify({"message": "Invalid content type. Only CSV or JSON are accepted"}), 400
+    
+    app.logger.info(f"Received {len(incidents)} incidents")
+    for incident in incidents:
+        stix_objects = build_stix_objects(incident, disarm_stix2)
+        for stix_object in stix_objects:
+            serialized = stix_object.serialize()
+            stix2_objects.insert_one(json.loads(serialized))
 
+    return jsonify({"message": "Incidents saved successfully"}), 201
 
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
@@ -145,7 +168,8 @@ def build_stix_objects(incident_data, disarm_stix2):
 
     # Create the Thread actor object
     actor_objects = []
-    for actor in incident_data['threat_actors']:
+    # threat_actor or threat_actors
+    for actor in incident_data.get('threat_actors',[incident_data.get('threat_actor')]):
         actor_id = actor
         actor_name = actor
         threat_actor = ThreatActor(
@@ -160,7 +184,7 @@ def build_stix_objects(incident_data, disarm_stix2):
 
     # Create the Location objects representing the target countries
     location_objects = []
-    for country in incident_data['target_countries']:
+    for country in incident_data.get('target_countries', [incident_data.get('target_country')]):
         country_id = country
         country_name = country
         country_object = Location(
@@ -177,10 +201,11 @@ def build_stix_objects(incident_data, disarm_stix2):
         # Search in the DISARM dictionary, the STIX ID of the technique to create the relationship
         technique_id = None
         for stix_object in disarm_stix2:
+            #print("STIX OBJECT" + stix_object["type"])
             if (stix_object["type"]!="attack-pattern"):
                 continue
             mitre_id = stix_object.get("external_references")[0].get("external_id")
-            print(mitre_id)
+            #print(mitre_id)
             if (mitre_id and mitre_id == technique_disarm_id.split(": ")[0]):
                     technique_objects.append(stix_object)
                     break

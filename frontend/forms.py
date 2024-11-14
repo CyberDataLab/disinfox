@@ -55,5 +55,6 @@ class IncidentForm(FlaskForm):
     submit = SubmitField('Submit Incident')
 
 class FileUploadForm(FlaskForm):
-    file = FileField('Upload File', validators=[FileRequired(), FileAllowed(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'], 'Allowed file types: txt, pdf, png, jpg, jpeg, gif')])
-    submit = SubmitField('Upload File')
+    file = FileField('Upload File', 
+                     validators=[FileRequired(), FileAllowed(['json', 'csv'], 'Only JSON and CSV files are accepted')],
+                     id="file", name="file")

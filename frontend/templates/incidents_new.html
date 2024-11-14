@@ -35,10 +35,11 @@
         
         <!-- Other Form Tab -->
         <div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
-            <p class="mt-3">Alternatively, you can upload a bulk bundle of incidents following the STIX format.</p>
-            <form method="POST" action="{{ url_for('new_incident') }}">
+            <p class="mt-3">Alternatively, you can upload a bulk bundle of incidents following the STIX format or with this <a href="{{ url_for('static', filename='bulk_incidents_template.csv') }}">CSV template</a>.</p></p>
+            <form method="POST" action="{{ url_for('new_incident') }}" enctype="multipart/form-data">
                 {{ file_form.hidden_tag() }}
-                {{ render_form(file_form) }}
+                {{ file_form.file }}
+                <button type="submit" class="btn btn-primary">Upload</button>
             </form>
         </div>
     </div>

@@ -39,7 +39,7 @@ def home():
 def get_incidents_from_back():
     incidents = []
     try:
-        response = requests.get(BACKEND_ROOT + "incidents")
+        response = requests.get(BACKEND_ROOT + "incidents?limit=50")
         if response.status_code == 200:
             incidents = response.json()["incidents"]
     except:
@@ -80,14 +80,14 @@ def new_incident():
         return render_template("incidents_new.html", incident_form=incident_form, file_form=file_form)
     
     # detect if the submit form was the file upload form or the incident form
-    if "file" in request.files:
-        if file_form.validate_on_submit():
-            file = file_form.file.data
-            filename = file.filename
-            file.save(os.path.join("uploads", filename))
-            return "File uploaded successfully", 200
-        else:
+    if file_form.file.data is not None and file_form.validate_on_submit():
+        # Sent the contents to the backend directly
+        app.logger.info("Uploading file...")
+        file = file_form.file.data # raw CSV
+        response = requests.post(BACKEND_ROOT + "bulk-incident", files={"file": (file.filename, file, file.content_type)})
+        if response.status_code != 201:
             return "Error uploading file", 500
+        return "File uploaded successfully", 200
 
     # get jsoned form data
     form = incident_form.data
@@ -117,7 +117,8 @@ def get_threat_actors():
 
     # return a reduced list of threat actors
     return jsonify(threat_actors[:10]), 200
-    
+
+
 @app.route("/about")
 def about():
     return render_template("about.html")
