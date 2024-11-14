@@ -4,15 +4,49 @@ from flask_bootstrap import Bootstrap
 from wtforms import StringField, TextAreaField, DateField, SelectMultipleField, SubmitField, FileField
 from wtforms.validators import DataRequired
 from flask_wtf.file import FileAllowed, FileRequired
+import pycountry
+import os
+import json
 
+DISARM_MATRIX_PATH = os.path.join(os.path.dirname(__file__), "data", "DISARM.json")
+
+
+available_countries = [country.name for country in pycountry.countries]
+
+app = Flask(__name__)
+app.logger.info("Getting the DISARM matrix from file from " + DISARM_MATRIX_PATH)
+techniques = []
+try:
+    with open(DISARM_MATRIX_PATH, "r") as f:
+        '''
+        transforming {"objects": [{ "type": "attack-pattern", "id": "attack-pattern--21fc4", ..., "external_references": [{"external_id": "T0014"}
+        to [{"id": "attack-pattern--T0014", name": "Spearphishing Attachment", disarm_id: "T0014", description: "A threat actor "}]
+        '''
+        disarm_stix2 = json.loads(f.read())
+        for obj in disarm_stix2["objects"]:
+            if obj["type"] == "attack-pattern":
+                technique = {}
+                technique["id"] = obj["id"]
+                technique["name"] = obj["name"]
+                technique["disarm_id"] = obj["external_references"][0]["external_id"]
+                technique["description"] = obj["description"]
+                techniques.append(technique)
+except:
+    pass
+if not techniques:
+    app.logger.error("FAILED")
+    exit(1)
+
+displayed_techniques = [f"{technique['disarm_id']}: {technique['name']}" for technique in techniques]
 
 class IncidentForm(FlaskForm):
-    event = StringField('Incident name', validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[DataRequired()])
+    event = StringField('Incident name', validators=[DataRequired()], id="event", name="event")
+    description = TextAreaField('Description', validators=[DataRequired()], id="event_description", name="event_description")
     date = DateField('Date', validators=[DataRequired()])
-    target_countries = SelectMultipleField('Target countries', choices=[])
-    threat_actors = SelectMultipleField('Threat actors', choices=[])
-    techniques = SelectMultipleField('Techniques', choices=[])
+    target_countries = SelectMultipleField('Target countries', choices=available_countries)
+    # the threat actor field choices is given dynamically
+    threat_actors = SelectMultipleField('Threat actors', choices=[], validators=[DataRequired()], coerce=str, id="threat_actors", render_kw={"multiple": "multiple"}, description="Select multiple threat actors")
+    techniques = SelectMultipleField('Techniques', choices=displayed_techniques)
     sources = SelectMultipleField('Sources', choices=[
         ('source1', 'Source 1'),
         ('source2', 'Source 2'),
