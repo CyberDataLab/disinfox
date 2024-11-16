@@ -110,7 +110,8 @@
                         </div>
                     </div>
                     <hr>
-                    <p><strong>🔗 Relationships:</strong> <span id="incidentRelationships"></span></p>
+                    <strong>🔗 Relationships:</strong> 
+                    <b id="incidentRelationshipsNumber">0</b>
                 </div>
                 <p><strong>🥩 Raw STIX2:</strong></p>
                 <div class="d-block">
@@ -192,6 +193,7 @@ function loadIncidentDetails(incidentId) {
     initializeMap(); // Initialize map with default coordinates
     let threatActorsNumber = 0;
     let techniquesNumber = 0;
+    let relationshipNumber = 0;
     let locations = [];
 
     // Clear previous content in the modal
@@ -203,7 +205,7 @@ function loadIncidentDetails(incidentId) {
     document.getElementById("incidentThreatActorsNumber").innerText = "0"
     document.getElementById("incidentTechniques").innerText = ""
     document.getElementById("incidentTechniquesNumber").innerText = "0"
-    document.getElementById("incidentRelationships").innerText = ""
+    document.getElementById("incidentRelationshipsNumber").innerText = "0"
     document.getElementById("incidentRawStix2").innerText = ""
 
 
@@ -213,6 +215,7 @@ function loadIncidentDetails(incidentId) {
         .then(data => {
             threatActorsNumber = 0;
             techniquesNumber = 0;
+            relationshipNumber = 0;
             locations = [];
             // Populate modal fields with the data from the response
             // The data is an STIX2 bundle with several objects (incident, location, threat actor, etc.) representing the incident
@@ -227,6 +230,7 @@ function loadIncidentDetails(incidentId) {
                     document.getElementById("incidentTechniques").appendChild(btn);
                     // Increment the number of threat actors by 1
                     techniquesNumber += 1;
+                    document.getElementById("incidentTechniquesNumber").innerText = techniquesNumber;
                 } else if (object.type === "intrusion-set") {
                     document.getElementById("incidentName").innerText = object.name;
                     document.getElementById("incidentDescription").innerText = object.description;
@@ -251,15 +255,14 @@ function loadIncidentDetails(incidentId) {
                     document.getElementById("incidentThreatActors").appendChild(btn);
                     // Increment the number of threat actors by 1
                     threatActorsNumber += 1;
+                    document.getElementById("incidentThreatActorsNumber").innerText = threatActorsNumber;
                 } else if (object.type === "relationship") {
-                    document.getElementById("incidentRelationships").innerText += `${object.source_ref} -> ${object.target_ref}\n`;
+                    relationshipNumber += 1;
+                    document.getElementById("incidentRelationshipsNumber").innerText = relationshipNumber;
                 }
             }
             // Display the raw STIX2 bundle for reference
             document.getElementById("incidentRawStix2").innerText = JSON.stringify(data, null, 2);
-            // Update the number of threat actors and techniques
-            document.getElementById("incidentThreatActorsNumber").innerText = threatActorsNumber;
-            document.getElementById("incidentTechniquesNumber").innerText = techniquesNumber;
             // Geocode locations to get coordinates and add markers to the map
             locations.forEach(locationName => {
                 geocodeLocation(locationName);

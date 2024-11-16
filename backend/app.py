@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, url_for
-from stix2 import parse, ThreatActor, Location, IntrusionSet, Relationship
+from stix2 import parse, ThreatActor, Location, IntrusionSet, Relationship, Bundle
 from uuid import uuid5, UUID
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -120,12 +120,11 @@ def get_incident(incident_id):
             target_obj = stix2_objects.find_one({"id": relationship["target_ref"]})
             target_obj.pop('_id', None)
             related_objects.append(target_obj)
+        relationship.pop('_id', None)
+        related_objects.append(relationship)
 
-    return jsonify({
-        "bundle": {
-            "objects": related_objects
-        }
-    }), 200
+    bundle = Bundle(objects=related_objects, allow_custom=True)
+    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
 
 @app.route('/bulk-incident', methods=['POST'])
 def save_bulk_incidents():
