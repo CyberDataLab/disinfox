@@ -13,6 +13,7 @@ bootstrap = Bootstrap5(app)
 
 
 BACKEND_ROOT = f"http://{os.environ.get('BACKEND_HOST', 'localhost')}:{os.environ.get('BACKEND_PORT', '5000')}/"
+LISTING_LIMIT = 50
 
 
 app.logger.info("Starting DISINFOX frontend...")
@@ -36,20 +37,24 @@ if not alive:
 def home():
     return render_template("index.html")
 
-def get_incidents_from_back():
-    incidents = []
+def get_incidents_from_back(page=1):
     try:
-        response = requests.get(BACKEND_ROOT + "incidents?limit=50")
+        response = requests.get(BACKEND_ROOT + "incidents", params={"page": page, "limit": LISTING_LIMIT})
         if response.status_code == 200:
-            incidents = response.json()["incidents"]
+            incidents_response = response.json()
     except:
         pass
-    return incidents
+    return incidents_response
 
 @app.route("/incidents", methods=["GET"])
 def incidents():
-    incidents = get_incidents_from_back()
-    return render_template("incidents.html", incidents=incidents)
+    page = request.args.get("page", 1, type=int)
+    incidents_response = get_incidents_from_back(page)
+    npages = incidents_response.get("total_incidents", 0) // incidents_response.get("limit", LISTING_LIMIT) + 1
+    total_incidents = incidents_response.get("total_incidents", 0)
+    return render_template("incidents.html", 
+                            incidents=incidents_response.get("incidents", []),
+                            npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=5)
 
 @app.route("/incidents/<incident_id>", methods=["GET"])
 def incident(incident_id):

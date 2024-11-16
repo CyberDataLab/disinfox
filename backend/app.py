@@ -8,6 +8,8 @@ import json
 from mfulde_dataset_parser import parse_csv_string
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
+DEFAULT_PAGE = 1
+DEFAULT_LIMIT = 10
 
 load_dotenv()
 app = Flask(__name__)
@@ -52,8 +54,8 @@ def save_incident():
 # Get all the incidents stored in the database with pagination and HATEOAS
 @app.route('/incidents', methods=['GET'])
 def get_incidents():
-    page = request.args.get('page', default=1, type=int)
-    limit = request.args.get('limit', default=10, type=int)
+    page = request.args.get('page', default=DEFAULT_PAGE, type=int)
+    limit = request.args.get('limit', default=DEFAULT_LIMIT, type=int)
 
     # Query to fetch only "intrusion-set" type incidents
     total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
