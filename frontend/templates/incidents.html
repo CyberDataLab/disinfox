@@ -3,14 +3,13 @@
 {% block content %}
 
 <h1>Incidents</h1>
-<p> There are currently {{ incidents|length }} incidents in the database.</p>
+<p> There are currently {{ total_incidents }} incidents in the database. You are viewing {{ incidents|length }} incidents in this page.</p>
 <a href="{{ url_for('new_incident') }}" class="btn btn-primary">Add new incident</a>
 
 <!-- Table listing of incidents -->
 <table class="table table-striped">
     <thead>
         <tr>
-            <th scope="col">#</th>
             <th scope="col">Incident name</th>
             <th scope="col">Description</th>
             <th scope="col">Date</th>
@@ -20,7 +19,6 @@
     <tbody>
         {% for incident in incidents %}
         <tr>
-            <th scope="row">{{ loop.index }}</th>
             <td>{{ incident.name }}</td>
             <td>{{ incident.description }}</td>
             <td>{{ incident.date }}</td>
@@ -35,26 +33,82 @@
         {% endfor %}
     </tbody>
 </table>
+<!-- Pagination, we have the actual page, max_selectable_pages and npages. 
+        Here, we will have max_selectable_pages to click on, and npages in total.
+        If max_selectable_pages-1 < npages, we will have a "..." to show that there are more pages. -->
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('incidents', page=page-1) }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for p in range(1, npages+1) %}
+        {% if p == page %}
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">{{ p }}<span class="visually-hidden">(current)</span></span>
+        </li>
+        {% elif p == 1 or p == npages or (p >= page - max_selectable_pages//2 and p <= page + max_selectable_pages//2) %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('incidents', page=p) }}">{{ p }}</a>
+        </li>
+        {% elif p == 2 or p == npages-1 %}
+        <li class="page-item">
+            <span class="page-link">...</span>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% if page < npages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('incidents', page=page+1) }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
 
 <!-- Modal for incident details -->
 <div class="modal fade" id="incidentModal" tabindex="-1" aria-labelledby="incidentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="incidentModalLabel">Incident Details</h5>
+                <h5 class="modal-title" id="incidentModalLabel">🍱 Incident details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p><strong>Incident Name:</strong> <span id="incidentName"></span></p>
-                <p><strong>Description:</strong> <span id="incidentDescription"></span></p>
-                <p><strong>Date:</strong> <span id="incidentDate"></span></p>
-                <!-- Dynamic fields populated by AJAX -->
-                <p><strong>Location:</strong> <span id="incidentLocations"></span></p>
-                <p><strong>Threat Actor:</strong> <span id="incidentThreatActors"></span></p>
-                <p><strong>Relationships:</strong> <span id="incidentRelationships"></span></p>
-                <p><strong>Raw STIX2:</strong> 
-                    <pre><code id="incidentRawStix2"></code></pre>
-                </p>
+                <div class="d-flex justify-content-between">
+                    <p><strong>📛 Incident Name:</strong> <span id="incidentName"></span></p>
+                    <p><strong>🧠 Description:</strong> <span id="incidentDescription"></span></p>
+                    <p><strong>📅 Date:</strong> <span id="incidentDate"></span></p>
+                </div>
+                <hr>
+                    <!-- Dynamic fields populated by AJAX -->
+                <div class="">
+                    <strong>📍 Location:</strong> 
+                    <!-- Two "columns" the locations and the map -->
+                    <div class="d-flex justify-content-between">
+                        <div id="incidentLocations" class="d-block flex-wrap justify-content-between"  style="flex: 1 1 auto; max-width: 50%;" ></div>
+                        <div id="map" style="height: 300px; width: 400px; flex: 0 0 400px;" class="border border-danger rounded-3"></div>
+                    </div>
+                    <hr>
+                    <strong>🥷 Threat Actor:</strong> 
+                    <div class="d-flex justify-content-between">
+                        <div id="incidentThreatActors" class="w-75"></div>
+                        <!-- Huge rectable to show the number of threat actors -->
+                        <div class="w-25 text-center bg-danger border border-danger rounded-3 p-1 align-self-center">
+                            <div id="incidentThreatActorsNumber" class="fs-3">0</div>
+                            <div>Threat Actors</div>
+                        </div>
+                    </div>
+                    
+                    <p><strong>🔗 Relationships:</strong> <span id="incidentRelationships"></span></p>
+                </div>
+                <p><strong>🥩 Raw STIX2:</strong></p>
+                <div class="d-block">
+                    <pre id="incidentRawStix2" class="p-1 border border-secondary rounded-3 mw-100 overflow-auto" style="max-height: 100px;"></pre>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-primary btn-sm" onclick="copyToClipboard()">📋 Copy</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -66,22 +120,83 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Include Leaflet CSS and JavaScript -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
-// Function to load incident details dynamically
+// Initialize map variable outside function to reuse
+let map;
+let markers = [];
+let defaultZoomLevel = 5; // 0 = whole world, 18 = street level
+
+function initializeMap() {
+    // Initialize map with Leaflet
+    if (map) {
+        // Remove previous markers in the map
+        markers.forEach(marker => marker.remove());
+        markers = [];
+        map.setView([0, 0], defaultZoomLevel);
+        return;
+    }
+    map = L.map('map').setView([0, 0], defaultZoomLevel);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+    }).addTo(map);
+}
+
+function addMarkerAndChangeView(latitude, longitude) {
+    // Add a marker to the map and change the view to the marker's coordinates
+    if (!map) {
+        initializeMap();
+    }
+    // Add a marker to the map
+    markers.push(L.marker([latitude, longitude]).addTo(map));
+    // Center the view so it is centered with all the markers
+    map.fitBounds(markers.map(marker => marker.getLatLng()));
+}
+
+function geocodeLocation(locationName) {
+    // Query Nominatim API to get coordinates based on location name
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const { lat, lon } = data[0];
+                addMarkerAndChangeView(lat, lon);
+            } else {
+                console.error("No coordinates found for location:", locationName);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching coordinates:", error);
+        });
+}
+
 function loadIncidentDetails(incidentId) {
+
+    //Map
+    initializeMap(); // Initialize map with default coordinates
+    let threatActorsNumber = 0;
+    let locations = [];
+
     // Clear previous content in the modal
-    document.getElementById("incidentName").innerText = "";
-    document.getElementById("incidentDescription").innerText = "";
-    document.getElementById("incidentDate").innerText = "";
-    document.getElementById("incidentLocations").innerText = "";
-    document.getElementById("incidentThreatActors").innerText = "";
-    document.getElementById("incidentRelationships").innerText = "";
-    document.getElementById("incidentRawStix2").innerText = "";
+    document.getElementById("incidentName").innerText = ""
+    document.getElementById("incidentDescription").innerText = ""
+    document.getElementById("incidentDate").innerText = ""
+    document.getElementById("incidentLocations").innerText = ""
+    document.getElementById("incidentThreatActors").innerText = ""
+    document.getElementById("incidentRelationships").innerText = ""
+    document.getElementById("incidentRawStix2").innerText = ""
+    document.getElementById("incidentThreatActorsNumber").innerText = "0"
+
 
     // AJAX request to get additional incident details
     fetch(`/incidents/${incidentId}`)
         .then(response => response.json())
         .then(data => {
+            threatActorsNumber = 0;
+            locations = [];
             // Populate modal fields with the data from the response
             // The data is an STIX2 bundle with several objects (incident, location, threat actor, etc.) representing the incident
             for (const object of data.bundle.objects) {
@@ -91,21 +206,53 @@ function loadIncidentDetails(incidentId) {
                     document.getElementById("incidentDescription").innerText = object.description;
                     document.getElementById("incidentDate").innerText = object.created;
                 } else if (object.type === "location") {
-                    document.getElementById("incidentLocations").innerText += `${object.name} | `;
+                    // Crear un botón de Bootstrap para cada "Threat Actor"
+                    const btn = document.createElement("button");
+                    // Random color for the button compatible with white letters
+                    btn.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    btn.className = "btn btn-secondary btn-sm me-2 my-1";
+                    btn.innerText = object.name;
+                    const locationName = object.name;
+                    document.getElementById("incidentLocations").appendChild(btn);
+                    locations.push(locationName);
                 } else if (object.type === "threat-actor") {
-                    document.getElementById("incidentThreatActors").innerText += `${object.name} | `;
+                    // Crear un botón de Bootstrap para cada "Threat Actor"
+                    const btn = document.createElement("button");
+                    // Random color for the button (white letters-compatible)
+                    btn.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    btn.className = "btn btn-secondary btn-sm me-2 my-1";
+                    btn.innerText = object.name;
+                    document.getElementById("incidentThreatActors").appendChild(btn);
+                    // Increment the number of threat actors by 1
+                    threatActorsNumber += 1;
                 } else if (object.type === "relationship") {
                     document.getElementById("incidentRelationships").innerText += `${object.source_ref} -> ${object.target_ref}\n`;
                 }
             }
             // Display the raw STIX2 bundle for reference
             document.getElementById("incidentRawStix2").innerText = JSON.stringify(data.bundle, null, 2);
-
-
+            // Update the number of threat actors
+            document.getElementById("incidentThreatActorsNumber").innerText = threatActorsNumber;
+            // Geocode locations to get coordinates and add markers to the map
+            locations.forEach(locationName => {
+                geocodeLocation(locationName);
+            });
         })
         .catch(error => {
             console.error("Error fetching incident details:", error);
         });
+
+
 }
+
+function copyToClipboard() {
+    const stixContent = document.getElementById("incidentRawStix2").innerText;
+    navigator.clipboard.writeText(stixContent).then(() => {
+        alert("Raw STIX content copied to clipboard!");
+    }).catch(error => {
+        console.error("Failed to copy text:", error);
+    });
+}
+
 </script>
 {% endblock %}
