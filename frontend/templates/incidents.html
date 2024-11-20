@@ -132,6 +132,8 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <!-- Export to PDF (request to the server, AJAX) -->
+                <button type="button" class="btn btn-primary" onclick="window.exportToPdf()">📄 Export to PDF</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -151,6 +153,7 @@
     let map;
     let markers = [];
     let defaultZoomLevel = 3; // 0 = whole world, 18 = street level
+    let currentIncidentId = null;
 
     function initializeMap() {
         // Initialize map with Leaflet
@@ -248,7 +251,7 @@
     }
 
     function loadIncidentDetails(incidentId) {
-
+        currentIncidentId = incidentId;
         //Map
         initializeMap(); // Initialize map with default coordinates
         let threatActorsNumber = 0;
@@ -344,6 +347,34 @@
         }).catch(error => {
             console.error("Failed to copy text:", error);
         });
+    }
+
+    function exportToPdf() {
+        // AJAX request to export the incident details to a PDF file
+        fetch(`/incidents/${currentIncidentId}/export`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/pdf'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create a URL for the blob
+                const url = URL.createObjectURL(blob);
+                // Create a link element to download the PDF
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `incident_${currentIncidentId}.pdf`;
+                a.click();
+            })
+            .catch(error => {
+                console.error("Error exporting incident to PDF:", error);
+            });
     }
 
 </script>

@@ -5,6 +5,7 @@ import os
 import json
 from flask_bootstrap import Bootstrap5
 from forms import IncidentForm, FileUploadForm
+from incident_export import export_incident_to_pdf
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secretkey"
@@ -109,7 +110,19 @@ def new_incident():
     else:
         return "Error creating incident", 500
     
-
+@app.route("/incidents/<incident_id>/export", methods=["GET"])
+def export_incident(incident_id):
+    try:
+        response = requests.get(BACKEND_ROOT + f"incidents/{incident_id}")
+        if response.status_code == 200:
+            incident = response.json()
+    except:
+        pass
+    app.logger.info(incident)
+    pdf = export_incident_to_pdf(incident)
+    if pdf is None:
+        return "Error exporting incident", 500
+    return pdf, 200, {"Content-Type": "application/pdf", "Content-Disposition": f"attachment; filename=incident_{incident_id}.pdf"}
 
     
 @app.route('/api/threat-actors', methods=['GET'])
