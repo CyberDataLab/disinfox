@@ -3,3 +3,4 @@ pandas==2.2.3
 pymongo==4.10.1
 python-dotenv==1.0.1
 stix2==3.0.1
+bcrypt==3.2.0

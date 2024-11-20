@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_wtf import FlaskForm
 from flask_bootstrap import Bootstrap
-from wtforms import StringField, TextAreaField, DateField, SelectMultipleField, SubmitField, FileField
+from wtforms import StringField, TextAreaField, DateField, SelectMultipleField, SubmitField, FileField, PasswordField, EmailField
 from wtforms.validators import DataRequired
 from flask_wtf.file import FileAllowed, FileRequired
 import pycountry
@@ -39,6 +39,8 @@ if not techniques:
 
 displayed_techniques = [f"{technique['disarm_id']}: {technique['name']}" for technique in techniques]
 
+Bootstrap(app)
+
 class IncidentForm(FlaskForm):
     event = StringField('Incident name', validators=[DataRequired()], id="event", name="event")
     description = TextAreaField('Description', validators=[DataRequired()], id="event_description", name="event_description")
@@ -58,3 +60,16 @@ class FileUploadForm(FlaskForm):
     file = FileField('Upload File', 
                      validators=[FileRequired(), FileAllowed(['json', 'csv'], 'Only JSON and CSV files are accepted')],
                      id="file", name="file")
+
+class RegisterForm(FlaskForm):
+    firstName = StringField('First Name', validators=[DataRequired()])
+    lastName = StringField('Last Name', validators=[DataRequired()])
+    email = EmailField('Email', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Register')
+
+class LoginForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
+

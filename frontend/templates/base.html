@@ -42,6 +42,28 @@
                         <a class="nav-link" href="{{ url_for('about') }}">About</a>
                     </li>
                 </ul>
+                <!-- Logged user indication in the right side of the screen -->
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <div class="navbar-text mx-2">
+                                <b>{{ current_user.firstName }} {{ current_user.lastName }}</b> ({{ current_user.email }})
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <button class="btn btn btn-outline-danger ms-2" onclick="location.href='{{ url_for('logout') }}'">
+                                Logout
+                            </button>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>

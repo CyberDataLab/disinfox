@@ -4,12 +4,18 @@ import pycountry
 import os
 import json
 from flask_bootstrap import Bootstrap5
-from forms import IncidentForm, FileUploadForm
+from forms import IncidentForm, FileUploadForm, LoginForm, RegisterForm
 from incident_export import export_incident_to_pdf
+
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from models import User
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secretkey"
 bootstrap = Bootstrap5(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 
 
@@ -32,11 +38,49 @@ if not alive:
 
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id, BACKEND_ROOT + "users/")
 
+@app.route("/logout", methods=["GET"])
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("home"))
 
 @app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    register_form = RegisterForm()
+    if request.method == "GET":
+        return render_template("register.html", form=register_form)
+    form = register_form.data
+    if not register_form.validate_on_submit():
+        return "Invalid form: " + str(register_form.errors), 400
+    response = requests.post(BACKEND_ROOT + "register", json=form)
+    if response.status_code == 201:
+        return redirect(url_for("login"), code=302)
+    else:
+        return "Error registering", 500
+    
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    login_form = LoginForm()
+    if request.method == "GET":
+        return render_template("login.html", form=login_form)
+    form = login_form.data
+    if not login_form.validate_on_submit():
+        return "Invalid form: " + str(login_form.errors), 400
+    response = requests.post(BACKEND_ROOT + "login", json=form)
+    if response.status_code != 200:
+        return "Error logging in", 500
+    user = response.json()
+    user = User(form["email"])
+    login_user(user)
+    return redirect(url_for("home"), code=302)
 
 def get_incidents_from_back(page=1):
     try:
@@ -77,8 +121,9 @@ def incident(incident_id):
     # json_response["raw_stix2"] = incident
 
     return jsonify(json_response), 200
-    
+
 @app.route("/incidents/new", methods=["GET", "POST"])
+@login_required
 def new_incident():
     incident_form = IncidentForm()
     file_form = FileUploadForm()

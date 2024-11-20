@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from os import environ, path
 import json
 from mfulde_dataset_parser import parse_csv_string
+import bcrypt
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 DEFAULT_PAGE = 1
@@ -19,6 +20,7 @@ client = MongoClient(environ.get("MONGODB_HOST"), int(environ.get("MONGODB_PORT"
 db = client[environ.get("MONGODB_DB")]
 # Collection to store the STIX2 objects
 stix2_objects = db['stix2_objects']
+users = db['users']
 
 NAMESPACE_UUID = UUID('12345678-1234-5678-1234-567812345678')
 # Load the DISARM STIX2 objects from boundle
@@ -36,6 +38,56 @@ disarm_stix2 = disarm_stix2['objects'] # Get the objects from the bundle
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({"message": "Welcome to the DISINFOX API. Check the documentation to see the available endpoints"}), 200
+
+@app.route('/register', methods=['POST'])
+def register():
+    # Regustrer a new user in the database
+    user_data = request.json
+    app.logger.info(f"Registering user: {user_data}")
+    # Basic validation
+    email = user_data.get("email")  
+    if not email or not user_data.get("password"):
+        return jsonify({"message": "Invalid user data"}), 400
+    # Check if the user exists
+    user = users.find_one({"email": email})
+    if user:
+        return jsonify({"message": "User already exists"}), 409
+    # Hash the password
+    hashed = bcrypt.hashpw(user_data["password"].encode('utf-8'), bcrypt.gensalt())
+    user_data["password"] = hashed
+    # Insert the user in the database
+    users.insert_one(user_data)
+    return jsonify({"message": "User registered successfully"}), 201
+
+@app.route('/login', methods=['POST'])
+def login():
+    # Login a user
+    user_data = request.json
+    app.logger.info(f"Logging in user: {user_data}")
+    email = user_data.get("email")
+    password = user_data.get("password")
+    if not email or not password:
+        return jsonify({"message": "Invalid user data"}), 400
+    # Check if the user exists
+    user = users.find_one({"email":email})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    # Check the password
+    if bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        return jsonify({"message": "Login successful"}), 200
+    else:
+        return jsonify({"message": "Invalid password"}), 401
+
+@app.route('/users/<user_id>', methods=['GET'])
+def get_user(user_id):
+    # Get a user by its ID
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    user.pop('_id', None)
+    user.pop('password', None)
+    return jsonify(user), 200
+
 
 # Incident upload endpoint
 @app.route('/incidents', methods=['POST'])

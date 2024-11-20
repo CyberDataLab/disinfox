@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block content %}
+<div class="col-md-6 mt-3 center mx-auto">
+    <h2>Register</h2>
+    <p>Enter your credentials to create a new account.</p>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        {{ render_form(form) }}
+    </form>
+    <div class="alert alert-info mt-3">
+        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
+    </div>
+</div>
+{% endblock %}
