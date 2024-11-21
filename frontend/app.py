@@ -82,6 +82,13 @@ def login():
     login_user(user)
     return redirect(url_for("home"), code=302)
 
+@app.route("/profile", methods=["GET"])
+@login_required
+def profile():
+    user_data = requests.get(BACKEND_ROOT + "users/" + current_user.email)
+    return render_template("profile.html", user=user_data.json())
+
+
 def get_incidents_from_back(page=1):
     try:
         response = requests.get(BACKEND_ROOT + "incidents", params={"page": page, "limit": LISTING_LIMIT})
