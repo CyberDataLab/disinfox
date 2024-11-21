@@ -274,7 +274,13 @@
 
         // AJAX request to get additional incident details
         fetch(`/incidents/${incidentId}`)
-            .then(response => response.json())
+            .then(response => {
+                // If we get a redirect, it means the user is not authenticated
+                if (response.redirected) {
+                    window.location.href = '{{ url_for("login") }}';
+                }
+                return response.json();
+            })  
             .then(data => {
                 threatActorsNumber = 0;
                 techniquesNumber = 0;

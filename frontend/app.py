@@ -109,6 +109,7 @@ def incidents():
                             npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=5)
 
 @app.route("/incidents/<incident_id>", methods=["GET"])
+@login_required
 def incident(incident_id):
     incident_stix_bundle = {}
     try:
