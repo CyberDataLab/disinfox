@@ -75,6 +75,8 @@ def login():
     if not login_form.validate_on_submit():
         return "Invalid form: " + str(login_form.errors), 400
     response = requests.post(BACKEND_ROOT + "login", json=form)
+    if response.status_code == 401:
+        return "Invalid credentials", 401
     if response.status_code != 200:
         return "Error logging in", 500
     user = response.json()
@@ -87,6 +89,16 @@ def login():
 def profile():
     user_data = requests.get(BACKEND_ROOT + "users/" + current_user.email)
     return render_template("profile.html", user=user_data.json())
+
+@app.route("/profile/delete", methods=["POST"])
+@login_required
+def delete_profile():
+    response = requests.delete(BACKEND_ROOT + "users/" + current_user.email)
+    if response.status_code == 200:
+        logout_user()
+        return redirect(url_for("home"), code=302)
+    return "Error deleting profile", 500
+
 
 
 def get_incidents_from_back(page=1):
@@ -102,6 +114,16 @@ def get_incidents_from_back(page=1):
 def incidents():
     page = request.args.get("page", 1, type=int)
     incidents_response = get_incidents_from_back(page)
+    # Append to the object if they have been favorited by the user
+    if current_user.is_authenticated:
+        try:
+            response = requests.get(BACKEND_ROOT + f"users/{current_user.email}/favorites")
+            if response.status_code == 200:
+                favorites = response.json()
+                for incident in incidents_response.get("incidents", []):
+                    incident["favorited"] = incident["id"] in favorites
+        except:
+            app.logger.error("Error getting favorites")
     npages = incidents_response.get("total_incidents", 0) // incidents_response.get("limit", LISTING_LIMIT) + 1
     total_incidents = incidents_response.get("total_incidents", 0)
     return render_template("incidents.html", 
@@ -177,6 +199,32 @@ def export_incident(incident_id):
         return "Error exporting incident", 500
     return pdf, 200, {"Content-Type": "application/pdf", "Content-Disposition": f"attachment; filename=incident_{incident_id}.pdf"}
 
+@app.route("/incidents/<incident_id>/favorite", methods=["POST"])
+@login_required
+def toggle_favorite(incident_id):
+    # The backend has DELETE and POST methods for favorites
+    favorite = False
+    try:
+        response = requests.get(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
+        if response.status_code == 200:
+            favorite = True
+        elif response.status_code == 404:
+            favorite = False
+        else:
+            return "Error getting favorites", 500
+    except:
+        return "Error getting favorites", 500
+    
+    if favorite:
+        response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
+        favorite = False
+    else:
+        response = requests.post(BACKEND_ROOT + f"users/{current_user.email}/favorites", json={"incident_id": incident_id})
+        favorite = True
+
+    if response.status_code == 200:
+        return jsonify({"favorite": favorite}), 200
+    return "Error toggling favorite", 500
     
 @app.route('/api/threat-actors', methods=['GET'])
 def get_threat_actors():

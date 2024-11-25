@@ -17,11 +17,21 @@
             </div>
             <div>
             Email: {{ user.email }}
-            </div>  
+            </div>
+            <!-- Delete profile button -->
+            <form action="{{ url_for('delete_profile') }}" method="post">
+                <button type="submit" class="btn btn-danger mt-3">Delete profile</button>
+            </form>
         </div>
     </div>
         <div>
-            <h2>Saved incidents</h2>
+            <h2>Favorite incidents</h2>
+            <div class="d-flex flex-column">
+                {% for incident in user.favoriteIncidents %}
+                    <div class="d-flex flex-column border border-3 border-primary p-3 mb-3">
+                        {{ incident }}
+                    </div>
+                {% endfor %}
         </div>
     </div>
 

@@ -55,6 +55,8 @@ def register():
     # Hash the password
     hashed = bcrypt.hashpw(user_data["password"].encode('utf-8'), bcrypt.gensalt())
     user_data["password"] = hashed
+    # Add favourite incidents list to the user
+    user_data["favoriteIncidents"] = []
     # Insert the user in the database
     users.insert_one(user_data)
     return jsonify({"message": "User registered successfully"}), 201
@@ -71,12 +73,12 @@ def login():
     # Check if the user exists
     user = users.find_one({"email":email})
     if not user:
-        return jsonify({"message": "User not found"}), 404
+        return jsonify({"message": "Invalid credentials"}), 401
     # Check the password
     if bcrypt.checkpw(password.encode('utf-8'), user["password"]):
         return jsonify({"message": "Login successful"}), 200
     else:
-        return jsonify({"message": "Invalid password"}), 401
+        return jsonify({"message": "Invalid credentials"}), 401
 
 @app.route('/users/<user_id>', methods=['GET'])
 def get_user(user_id):
@@ -88,6 +90,55 @@ def get_user(user_id):
     user.pop('password', None)
     return jsonify(user), 200
 
+@app.route('/users/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    # Delete a user
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    users.delete_one({"email": user_id})
+    return jsonify({"message": "User deleted successfully"}), 200
+
+
+@app.route('/users/<user_id>/favorites', methods=['GET', 'POST'])
+def manage_favourites(user_id):
+    # Get the favourite incidents of a user
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    if request.method == 'GET':
+        return jsonify(user.get("favoriteIncidents", [])), 200
+    # Add an incident to the user's favourite list
+    incident_id = request.json.get("incident_id")
+    if not incident_id:
+        return jsonify({"message": "Invalid incident ID"}), 400
+    if incident_id not in user.get("favoriteIncidents", []):
+        user["favoriteIncidents"].append(incident_id)
+        users.update_one({"email": user_id}, {"$set": {"favoriteIncidents": user["favoriteIncidents"]}})
+        return jsonify({"message": "Incident added to favourites"}), 200
+    return jsonify({"message": "Incident already in favourites"}), 200
+
+@app.route('/users/<user_id>/favorites/<incident_id>', methods=['GET'])
+def check_favourite(user_id, incident_id):
+    # Check if an incident is in the user's favourite list
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    if incident_id in user.get("favoriteIncidents", []):
+        return jsonify({"message": "Incident in favourites"}), 200
+    return jsonify({"message": "Incident not in favourites"}), 404
+
+@app.route('/users/<user_id>/favorites/<incident_id>', methods=['DELETE'])
+def remove_favourite(user_id, incident_id):
+    # Remove an incident from the user's favourite list
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    if incident_id in user.get("favoriteIncidents", []):
+        user["favoriteIncidents"].remove(incident_id)
+        users.update_one({"email": user_id}, {"$set": {"favoriteIncidents": user["favoriteIncidents"]}})
+        return jsonify({"message": "Incident removed from favourites"}), 200
+    return jsonify({"message": "Incident not in favourites"}), 200
 
 # Incident upload endpoint
 @app.route('/incidents', methods=['POST'])
@@ -201,6 +252,7 @@ def save_bulk_incidents():
             stix2_objects.insert_one(json.loads(serialized))
 
     return jsonify({"message": "Incidents saved successfully"}), 201
+
 
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
