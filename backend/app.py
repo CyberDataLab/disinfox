@@ -253,6 +253,15 @@ def threat_actors():
         for ta in threat_actors:
             ta.pop('_id', None)
         return build_paginated_json(threat_actors, page, limit, total_threat_actors, "threat_actors", "threat_actors"), 200
+    return "Not implemented", 501
+    
+@app.route('/threat-actors/<threat_actor_id>', methods=['GET'])
+def threat_actor(threat_actor_id):
+    threat_actor = stix2_objects.find_one({"id": threat_actor_id})
+    if not threat_actor:
+        return jsonify({"message": "Threat Actor not found"}), 404
+    threat_actor.pop('_id', None)
+    return jsonify(threat_actor), 200
 
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data

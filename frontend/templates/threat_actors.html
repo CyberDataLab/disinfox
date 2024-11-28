@@ -22,7 +22,9 @@
             <td>{{ ta.name }}</td>
             <td>{{ ta.description }}</td>
             <td>{{ ta.date }}</td>
-            <td></td>
+            <td>
+                <a href="{{ url_for('threat_actor', ta_id=ta.id) }}" class="btn btn-primary">View</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

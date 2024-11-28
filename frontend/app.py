@@ -241,7 +241,15 @@ def threat_actors():
         return render_template("threat_actors.html", threat_actors = response_json.get("threat_actors"), 
                     npages=npages, page=page, total_threat_actors=response_json.get("total_threat_actors") , max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
     return "Not implemented", 400
-    
+
+@app.route("/threat-actors/<ta_id>",  methods=["GET"])
+@login_required
+def threat_actor(ta_id):
+    response = requests.get(BACKEND_ROOT + "threat-actors/" + ta_id)
+    if response.status_code != 200:
+        return "Error retrieving Threat Actor", 500
+    return render_template("threat_actor.html", threat_actor=response.json())
+
 @app.route('/api/threat-actors', methods=['GET'])
 def get_threat_actors():
     # dummy threat actor example

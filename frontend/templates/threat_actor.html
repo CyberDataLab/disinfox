@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{ threat_actor.name }}</h1>
+
+<div>
+    <div>
+        <b>Name:</b> {{threat_actor.name}}
+    </div>
+    <div>
+        <b>Description:</b> {{threat_actor.description}}
+    </div>
+    <div>
+        <b>Creation date:</b> {{threat_actor.created}}
+    </div>
+    <div>
+        <b>Modification date:</b> {{threat_actor.modified}}
+    </div>
+</div>
+
+{% endblock %}
