@@ -174,43 +174,15 @@ def get_incidents():
     return build_paginated_json(incidents, page, limit, total_incidents, "get_incidents", "incidents"), 200
 
 
-
-
-
 @app.route('/incidents/<incident_id>', methods=['GET'])
 def get_incident(incident_id):
-    related_objects = []
-
     # Fetch the incident from the database
     incident = stix2_objects.find_one({"id": incident_id})
-    app.logger.info(f"Fetching incident {incident_id}. Found: {incident}")
     if not incident:
         return jsonify({"message": "Incident not found"}), 404
     incident.pop('_id', None)
-    related_objects.append(incident)
+    return jsonify(incident), 200
 
-    # We get the relationships that contain the incident as source or target
-    relationships = stix2_objects.find({"$or": [{"source_ref": incident_id}, {"target_ref": incident_id}]})
-    # Get the other objects related to the incident
-    for relationship in relationships:
-        app.logger.info(f"Appending relationship: {relationship['id']}")
-        # Just search the objects that are not already in the related_objects list (we alredy appended them)
-        # Degug this
-        app.logger.info(f"Checking if {relationship['source_ref']} is in related_objects: {any(obj['id'] == relationship['source_ref'] for obj in related_objects)}")
-        if relationship["source_ref"] and not any(obj["id"] == relationship["source_ref"] for obj in related_objects):
-            source_obj = stix2_objects.find_one({"id": relationship["source_ref"]})
-            source_obj.pop('_id', None)
-            related_objects.append(source_obj)
-        app.logger.info(f"Checking if {relationship['target_ref']} is in related_objects: {any(obj['id'] == relationship['target_ref'] for obj in related_objects)}")
-        if relationship["target_ref"] and not any(obj["id"] == relationship["target_ref"] for obj in related_objects):
-            target_obj = stix2_objects.find_one({"id": relationship["target_ref"]})
-            target_obj.pop('_id', None)
-            related_objects.append(target_obj)
-        relationship.pop('_id', None)
-        related_objects.append(relationship)
-
-    bundle = Bundle(objects=related_objects, allow_custom=True)
-    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
 
 @app.route('/bulk-incident', methods=['POST'])
 def save_bulk_incidents():
@@ -235,6 +207,41 @@ def save_bulk_incidents():
             stix2_objects.insert_one(json.loads(serialized))
 
     return jsonify({"message": "Incidents saved successfully"}), 201
+
+@app.route('/neighbors/<stix_id>', methods=['GET'])
+def neighbors(stix_id):
+    related_objects = []
+
+    # Fetch the incident from the database
+    incident = stix2_objects.find_one({"id": stix_id})
+    app.logger.info(f"Fetching incident {stix_id}. Found: {incident}")
+    if not incident:
+        return jsonify({"message": "Incident not found"}), 404
+    incident.pop('_id', None)
+    related_objects.append(incident)
+
+    # We get the relationships that contain the incident as source or target
+    relationships = stix2_objects.find({"$or": [{"source_ref": stix_id}, {"target_ref": stix_id}]})
+    # Get the other objects related to the incident
+    for relationship in relationships:
+        app.logger.info(f"Appending relationship: {relationship['id']}")
+        # Just search the objects that are not already in the related_objects list (we alredy appended them)
+        # Degug this
+        app.logger.info(f"Checking if {relationship['source_ref']} is in related_objects: {any(obj['id'] == relationship['source_ref'] for obj in related_objects)}")
+        if relationship["source_ref"] and not any(obj["id"] == relationship["source_ref"] for obj in related_objects):
+            source_obj = stix2_objects.find_one({"id": relationship["source_ref"]})
+            source_obj.pop('_id', None)
+            related_objects.append(source_obj)
+        app.logger.info(f"Checking if {relationship['target_ref']} is in related_objects: {any(obj['id'] == relationship['target_ref'] for obj in related_objects)}")
+        if relationship["target_ref"] and not any(obj["id"] == relationship["target_ref"] for obj in related_objects):
+            target_obj = stix2_objects.find_one({"id": relationship["target_ref"]})
+            target_obj.pop('_id', None)
+            related_objects.append(target_obj)
+        relationship.pop('_id', None)
+        related_objects.append(relationship)
+
+    bundle = Bundle(objects=related_objects, allow_custom=True)
+    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
 
 @app.route('/threat-actors', methods=['GET','POST'])
 def threat_actors():

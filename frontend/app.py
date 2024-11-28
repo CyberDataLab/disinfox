@@ -132,26 +132,12 @@ def incidents():
                             npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
 
 @app.route("/incidents/<incident_id>", methods=["GET"])
-@login_required
 def incident(incident_id):
-    incident_stix_bundle = {}
-    try:
-        response = requests.get(BACKEND_ROOT + f"incidents/{incident_id}")
-        if response.status_code == 200:
-            app.logger.info(response.json())
-            incident_stix_bundle = response.json()
-    except:
-        pass
-    json_response = incident_stix_bundle
-    # json_response = {}
-    # for stix_object in incident["bundle"]["objects"]:
-    #     if stix_object["type"] == "location":
-    #         json_response["location"] = stix_object.get("name", "")
-    #     elif stix_object["type"] == "threat-actor":
-    #         json_response["threat_actor"] = stix_object.get("name", "")
-    # json_response["raw_stix2"] = incident
-
-    return jsonify(json_response), 200
+    response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
+    if response.status_code != 200:
+        return "Error retrieving incident", 500
+    incident = response.json()
+    return render_template("incident.html", incident=incident)
 
 @app.route("/incidents/new", methods=["GET", "POST"])
 @login_required
@@ -260,6 +246,28 @@ def get_threat_actors():
 
     # return a reduced list of threat actors
     return jsonify(threat_actors[:10]), 200
+
+@app.route('/api/stix_neighbors/<stix_id>', methods=['GET'])
+@login_required
+def api_stix_neighbors(stix_id):
+    incident_stix_bundle = {}
+    try:
+        response = requests.get(BACKEND_ROOT + f"neighbors/{stix_id}")
+        if response.status_code == 200:
+            app.logger.info(response.json())
+            stix_bundle = response.json()
+    except:
+        pass
+    json_response = stix_bundle
+    # json_response = {}
+    # for stix_object in incident["bundle"]["objects"]:
+    #     if stix_object["type"] == "location":
+    #         json_response["location"] = stix_object.get("name", "")
+    #     elif stix_object["type"] == "threat-actor":
+    #         json_response["threat_actor"] = stix_object.get("name", "")
+    # json_response["raw_stix2"] = incident
+
+    return jsonify(stix_bundle), 200
 
 
 @app.route("/about")
