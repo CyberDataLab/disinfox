@@ -170,29 +170,12 @@ def get_incidents():
     for incident in incidents:
         incident.pop('_id', None)
 
+    # Paginate
+    return build_paginated_json(incidents, page, limit, total_incidents, "get_incidents", "incidents"), 200
 
 
-    # Construct HATEOAS links
-    def build_url(page):
-        return url_for('get_incidents', page=page, limit=limit, _external=True)
 
-    # Pagination links
-    links = {
-        "self": build_url(page),
-        "next": build_url(page + 1) if (page * limit) < total_incidents else None,
-        "prev": build_url(page - 1) if page > 1 else None,
-        "first": build_url(1),
-        "last": build_url((total_incidents // limit) + (1 if total_incidents % limit > 0 else 0))
-    }
 
-    # Return a JSON response with incidents and pagination links
-    return jsonify({
-        "incidents": incidents,
-        "page": page,
-        "limit": limit,
-        "total_incidents": total_incidents,
-        "links": links
-    }), 200
 
 @app.route('/incidents/<incident_id>', methods=['GET'])
 def get_incident(incident_id):
@@ -235,7 +218,7 @@ def save_bulk_incidents():
     ftype = request.files['file'].content_type
     app.logger.info(f"Received file with content type: {ftype}")
     # If CSV (content-type: text/csv) we parse the CSV and build the STIX2 objects
-    if ftype == 'text/csv':
+    if ftype in ['text/csv','application/vnd.ms-excel']:
         csv_string = request.files['file'].read().decode('utf-8')
         app.logger.info(f"Received CSV: {csv_string}")
         incidents = parse_csv_string(csv_string)
@@ -253,6 +236,23 @@ def save_bulk_incidents():
 
     return jsonify({"message": "Incidents saved successfully"}), 201
 
+@app.route('/threat-actors', methods=['GET','POST'])
+def threat_actors():
+    if request.method == "GET":
+        page = request.args.get('page', default=DEFAULT_PAGE, type=int)
+        limit = request.args.get('limit', default=DEFAULT_LIMIT, type=int)
+        # Query to fetch only "intrusion-set" type incidents
+        stix_type = "threat-actor"
+        total_threat_actors = stix2_objects.count_documents({"type": stix_type })
+        threat_actors_cursor = stix2_objects.find({"type": stix_type })
+        app.logger.info(f"Retrieved {total_threat_actors} Threat Actors")
+        
+        # Apply pagination
+        threat_actors = list(threat_actors_cursor.skip((page - 1) * limit).limit(limit))
+        # Remove the _id field from the documents
+        for ta in threat_actors:
+            ta.pop('_id', None)
+        return build_paginated_json(threat_actors, page, limit, total_threat_actors, "threat_actors", "threat_actors"), 200
 
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
@@ -350,7 +350,28 @@ def build_stix_objects(incident_data, disarm_stix2):
 
     return stix_objects
 
+def build_paginated_json(objects, page, limit, total_objects, endpoint_function, objects_name="objects"):
+    # Construct HATEOAS links
+    def build_url(page):
+        return url_for(endpoint_function, page=page, limit=limit, _external=True)
 
+    # Pagination links
+    links = {
+        "self": build_url(page),
+        "next": build_url(page + 1) if (page * limit) < total_objects else None,
+        "prev": build_url(page - 1) if page > 1 else None,
+        "first": build_url(1),
+        "last": build_url((total_objects // limit) + (1 if total_objects % limit > 0 else 0))
+    }
+
+    # Return a JSON response with incidents and pagination links
+    return jsonify({
+        objects_name: objects,
+        "page": page,
+        "limit": limit,
+        "total_"+objects_name: total_objects,
+        "links": links
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -21,6 +21,7 @@ login_manager.login_view = "login"
 
 BACKEND_ROOT = f"http://{os.environ.get('BACKEND_HOST', 'localhost')}:{os.environ.get('BACKEND_PORT', '5000')}/"
 LISTING_LIMIT = 50
+MAX_INDIVIDUAL_SELECTABLE_PAGES = 5
 
 
 app.logger.info("Starting DISINFOX frontend...")
@@ -128,7 +129,7 @@ def incidents():
     total_incidents = incidents_response.get("total_incidents", 0)
     return render_template("incidents.html", 
                             incidents=incidents_response.get("incidents", []),
-                            npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=5)
+                            npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
 
 @app.route("/incidents/<incident_id>", methods=["GET"])
 @login_required
@@ -225,6 +226,21 @@ def toggle_favorite(incident_id):
     if response.status_code == 200:
         return jsonify({"favorite": favorite}), 200
     return "Error toggling favorite", 500
+
+@app.route("/threat-actors/", methods=["GET", "POST"])
+@login_required
+def threat_actors():
+    if request.method == "GET":
+        page = request.args.get("page", 1, type=int)
+        response = requests.get(BACKEND_ROOT + "threat-actors", params={"page": page, "limit": LISTING_LIMIT})
+        if response.status_code != 200:
+            "Error retrieving Threat Actors", 500
+        response_json = response.json()
+        app.logger.info(response_json)
+        npages = response_json.get("total_threat_actors", 0) // response_json.get("limit", LISTING_LIMIT) + 1
+        return render_template("threat_actors.html", threat_actors = response_json.get("threat_actors"), 
+                    npages=npages, page=page, total_threat_actors=response_json.get("total_threat_actors") , max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
+    return "Not implemented", 400
     
 @app.route('/api/threat-actors', methods=['GET'])
 def get_threat_actors():
