@@ -50,8 +50,8 @@
                     incidentLink.href = `{{ url_for('incident', incident_id='')}}${object.id}`;
                     incidentLink.textContent = object.name;
                     // Random color with a quarter of opacity 
-                    incidentLink.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16)}40`;
-                    incidentLink.className = 'btn btn-primary me-2 mb-2';
+                    incidentLink.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}40`;
+                    incidentLink.className = 'btn btn-primary me-2 mb-2 border border-primary-subtle';
                     taIncidents.appendChild(incidentLink);
                 }
             });

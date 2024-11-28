@@ -247,7 +247,7 @@
                     if (object.type === "attack-pattern") {
                         const btn = document.createElement("button");
                         // Random color for the button compatible with white letters
-                        btn.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                        btn.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}75`;
                         btn.className = "btn btn-secondary btn-sm me-2 my-1";
                         btn.innerText = object.name;
                         document.getElementById("incidentTechniques").appendChild(btn);
@@ -262,7 +262,7 @@
                         // Crear un botón de Bootstrap para cada "Threat Actor"
                         const btn = document.createElement("button");
                         // Random color for the button compatible with white letters
-                        btn.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                        btn.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}75`;
                         btn.className = "btn btn-secondary btn-sm me-2 my-1";
                         btn.innerText = object.name;
                         const locationName = object.name;
@@ -272,8 +272,8 @@
                         // Crear un botón de Bootstrap para cada "Threat Actor"
                         const btn = document.createElement("button");
                         // Random color for the button (white letters-compatible)
-                        btn.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                        btn.className = "btn btn-secondary btn-sm me-2 my-1";
+                        btn.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}75`;
+                        btn.className = "btn btn-primary btn-sm me-2 my-1";
                         btn.innerText = object.name;
                         document.getElementById("incidentThreatActors").appendChild(btn);
                         // Increment the number of threat actors by 1
