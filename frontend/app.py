@@ -269,6 +269,18 @@ def api_incident_detailed_bundle(incident_id):
 
     return jsonify(stix_bundle), 200
 
+@app.route('/api/threat-actor-details/<threat_actor_id>', methods=['GET'])
+@login_required
+def api_threat_actor_detailed_bundle(threat_actor_id):
+    incident_stix_bundle = {}
+    try:
+        response = requests.get(BACKEND_ROOT + f"neighbors/{threat_actor_id}")
+        if response.status_code == 200:
+            app.logger.info(response.json())
+            stix_bundle = response.json()
+    except:
+        pass
+    return jsonify(stix_bundle), 200
 
 @app.route("/about")
 def about():

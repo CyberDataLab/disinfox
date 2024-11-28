@@ -17,6 +17,48 @@
     <div>
         <b>Modification date:</b> {{threat_actor.modified}}
     </div>
+    <hr>
+    <div>
+        <p><strong>🔎 Found in:</strong></p>
+        <div id="taIncidents" class="d-flex flex-wrap">
+        </div>
+    </div>
 </div>
 
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    // Fetch the incidents where the threat actor is present
+    fetch(`{{ url_for('api_threat_actor_detailed_bundle', threat_actor_id=threat_actor.id) }}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Get the bundle related STIX objects
+            objects = data.objects;
+
+            // If the object is a intrusion-set, add it to the incidents
+            objects.forEach(object => {
+                if (object.type === 'intrusion-set') {
+                    const incidentLink = document.createElement('a');
+                    incidentLink.href = `{{ url_for('incident', incident_id='')}}${object.id}`;
+                    incidentLink.textContent = object.name;
+                    // Random color with a quarter of opacity 
+                    incidentLink.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16)}40`;
+                    incidentLink.className = 'btn btn-primary me-2 mb-2';
+                    taIncidents.appendChild(incidentLink);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+</script>
+    
 {% endblock %}
