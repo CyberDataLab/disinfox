@@ -89,7 +89,15 @@ def login():
 @login_required
 def profile():
     user_data = requests.get(BACKEND_ROOT + "users/" + current_user.email)
-    return render_template("profile.html", user=user_data.json())
+    if user_data.status_code != 200:
+        return "Error getting profile", 500
+    # Get the data from the favorite incidents id
+    favorites = []
+    for incident_id in user_data.json().get("favoriteIncidents", []):
+        response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
+        if response.status_code == 200:
+            favorites.append(response.json())
+    return render_template("profile.html", user=user_data.json(), favorites=favorites)
 
 @app.route("/profile/delete", methods=["POST"])
 @login_required
@@ -99,6 +107,7 @@ def delete_profile():
         logout_user()
         return redirect(url_for("home"), code=302)
     return "Error deleting profile", 500
+    
 
 
 
@@ -212,6 +221,14 @@ def toggle_favorite(incident_id):
     if response.status_code == 200:
         return jsonify({"favorite": favorite}), 200
     return "Error toggling favorite", 500
+
+@app.route("/incidents/<incident_id>/remove_favorite", methods=["POST"])
+@login_required
+def remove_favorite(incident_id):
+    response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
+    if response.status_code != 200:
+        return "Error deleting favorite", 500
+    return redirect(url_for("profile"), code=302)
 
 @app.route("/threat-actors/", methods=["GET", "POST"])
 @login_required
