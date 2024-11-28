@@ -227,7 +227,7 @@
 
 
         // AJAX request to get additional incident details
-        fetch(`{{ url_for('api_stix_neighbors', stix_id=incident.id) }}`)
+        fetch(`{{ url_for('api_incident_detailed_bundle', incident_id=incident.id) }}`)
             .then(response => {
                 // If we get a redirect, it means the user is not authenticated
                 if (response.redirected) {

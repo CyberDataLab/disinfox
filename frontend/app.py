@@ -247,12 +247,12 @@ def get_threat_actors():
     # return a reduced list of threat actors
     return jsonify(threat_actors[:10]), 200
 
-@app.route('/api/stix_neighbors/<stix_id>', methods=['GET'])
+@app.route('/api/incident-details/<incident_id>', methods=['GET'])
 @login_required
-def api_stix_neighbors(stix_id):
+def api_incident_detailed_bundle(incident_id):
     incident_stix_bundle = {}
     try:
-        response = requests.get(BACKEND_ROOT + f"neighbors/{stix_id}")
+        response = requests.get(BACKEND_ROOT + f"neighbors/{incident_id}")
         if response.status_code == 200:
             app.logger.info(response.json())
             stix_bundle = response.json()
