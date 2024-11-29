@@ -29,24 +29,27 @@
     <!-- Favourite incidents as cards -->
     <div class="row">
         {% for incident in favorites %}
-        <!-- Same size for all cards, width and height -->
         <div class="col-sm-4 mb-2 mt-2 mb-sm-0" style="height: 200px;">
             <div class="card bg-secondary-subtle text-secondary-subtle mh-100 h-100 border border-3 border-secondary-subtle">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
                         <h5 class="card-title">{{ incident.name }}</h5>
-                        <p class="card-text">{{ incident.description }}</p>
+                        <!-- Restricting description height -->
+                        <p class="card-text" style="max-height: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ incident.description }}
+                        </p>
                     </div>
                     <!-- Button to remove the incident and view at the right of the card -->
                     <div class="d-inline align-self-end">
                         <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-primary">View</a>
-                        <form action="{{ url_for('remove_favorite', incident_id=incident.id) }}" method="post"
-                            class="d-inline">
+                        <form action="{{ url_for('remove_favorite', incident_id=incident.id) }}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-danger">Unfavorite</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
+        
         {% endfor %}
     </div>
 </div>
