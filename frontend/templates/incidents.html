@@ -8,6 +8,7 @@
 <a href="{{ url_for('new_incident') }}" class="btn btn-primary">Add new incident</a>
 
 <!-- Table listing of incidents -->
+<div class="table-responsive">
 <table class="table table-striped">
     <thead>
         <tr>
@@ -20,8 +21,13 @@
     <tbody>
         {% for incident in incidents %}
         <tr>
-            <td>{{ incident.name }}</td>
-            <td>{{ incident.description }}</td>
+            <td class="text-truncate name" style="word-wrap: break-word; min-width: 20px; max-width: 200px;">
+                {{ incident.name }}
+            </td>
+            <!-- We just show the first 200 characters of the description -->
+            <td class="text-truncate description" style="word-wrap: break-word; min-width: 20px; max-width: 400px;">
+                {{ incident.description }}
+            </td>
             <td>{{ incident.date }}</td>
             <td>
                 <!-- Button to trigger modal -->
@@ -50,6 +56,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 <!-- Pagination, we have the actual page, max_selectable_pages and npages. 
         Here, we will have max_selectable_pages to click on, and npages in total.
         If max_selectable_pages-1 < npages, we will have a "..." to show that there are more pages. -->
