@@ -7,6 +7,7 @@ from os import environ, path
 import json
 from mfulde_dataset_parser import parse_csv_string
 import bcrypt
+import re
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 DEFAULT_PAGE = 1
@@ -20,6 +21,7 @@ client = MongoClient(environ.get("MONGODB_HOST"), int(environ.get("MONGODB_PORT"
 db = client[environ.get("MONGODB_DB")]
 # Collection to store the STIX2 objects
 stix2_objects = db['stix2_objects']
+stix2_objects.create_index("id", unique=True)
 users = db['users']
 
 NAMESPACE_UUID = UUID('12345678-1234-5678-1234-567812345678')
@@ -200,13 +202,19 @@ def save_bulk_incidents():
         return jsonify({"message": "Invalid content type. Only CSV or JSON are accepted"}), 400
     
     app.logger.info(f"Received {len(incidents)} incidents")
+    repeated = []
     for incident in incidents:
         stix_objects = build_stix_objects(incident, disarm_stix2)
         for stix_object in stix_objects:
+            isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
+            if isRepeated:
+                app.logger.info(f"Skipping object {stix_object['id']} because it already exists")
+                repeated.append(stix_object['id'])
+                continue
             serialized = stix_object.serialize()
             stix2_objects.insert_one(json.loads(serialized))
 
-    return jsonify({"message": "Incidents saved successfully"}), 201
+    return jsonify({"message": "Incidents saved successfully", "repeated": repeated}), 201
 
 @app.route('/neighbors/<stix_id>', methods=['GET'])
 def neighbors(stix_id):
@@ -336,13 +344,19 @@ def build_stix_objects(incident_data, disarm_stix2):
 
 
     # Create a IntrusionSet object to represent the incident
-    intrusion_id = incident_data['event']
     intrusion_name = incident_data['event']
     intrusion_description = incident_data['event_description']
+    # Transform the year to a date
+    incident_first_seen = str(incident_data.get('year')) + "-01-01T00:00:00Z"
+    # Eliminar todo excepto caracteres de la a-Z
+    normal_name = re.sub(r'[^a-zA-Z0-9]', '', intrusion_name)
+    normal_description = re.sub(r'[^a-zA-Z0-9]', '', intrusion_description)
+
     intrusion_object = IntrusionSet(
-        id="intrusion-set--" + str(uuid5(NAMESPACE_UUID, intrusion_id)),
+        id="intrusion-set--" + str(uuid5(NAMESPACE_UUID, normal_name + "-" + normal_description)),
         name=intrusion_name,
         description=intrusion_description,
+        first_seen=incident_first_seen,
         labels=["incident", "disinformation"]
     )
 

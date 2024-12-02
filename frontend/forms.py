@@ -39,7 +39,6 @@ if not techniques:
 
 displayed_techniques = [f"{technique['disarm_id']}: {technique['name']}" for technique in techniques]
 
-Bootstrap(app)
 
 class IncidentForm(FlaskForm):
     event = StringField('Incident name', validators=[DataRequired()], id="event", name="event")
