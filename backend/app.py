@@ -165,11 +165,19 @@ def get_incidents():
     limit = request.args.get('limit', default=DEFAULT_LIMIT, type=int)
     sort_field = request.args.get('sort', default=DEFAULT_SORT_FIELD, type=str)
     sort_order = request.args.get('order', default=DEFAULT_SORT_ORDER, type=str)
+    newer_than = request.args.get('newer_than', default=None, type=str)
 
-    # Query to fetch only "intrusion-set" type incidents
-    total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
+
     # Fetch the incidents from the database
-    incidents_cursor = stix2_objects.find({"type": "intrusion-set"})
+    if newer_than:
+        total_incidents = stix2_objects.count_documents({"type": "intrusion-set", "modified": {"$gt": newer_than}})
+        incidents_cursor = stix2_objects.find({"type": "intrusion-set", "modified": {"$gt": newer_than}})
+    else:
+        total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
+        incidents_cursor = stix2_objects.find({"type": "intrusion-set"})
+    
+    # Get the total number of incidents
+
     incidents_cursor.sort(sort_field, -1 if sort_order == "desc" else 1)
     
     # Apply pagination
