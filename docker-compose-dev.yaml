@@ -72,7 +72,8 @@ services:
     restart: always # this prevents a startup failure (becouse of backend not being ready)
     environment:
       - FLASK_RUN_PORT=${PUBLIC_API_FLASK_PORT}
-      - DISINFOX_BACKEND_URL=http://${BACKEND_CONTAINER_NAME}:${BACKEND_FLASK_PORT}/
+      - BACKEND_HOST=${BACKEND_CONTAINER_NAME}
+      - BACKEND_PORT=${BACKEND_FLASK_PORT}      
       - FLASK_DEBUG=1
     volumes:
       - ./public-api:/app
