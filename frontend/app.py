@@ -108,7 +108,13 @@ def delete_profile():
         return redirect(url_for("home"), code=302)
     return "Error deleting profile", 500
     
-
+@app.route("/profile/generate-api-key", methods=["POST"])
+@login_required
+def generate_api_key():
+    response = requests.post(BACKEND_ROOT + "users/" + current_user.email + "/generate-api-key")
+    if response.status_code == 201:
+        return redirect(url_for("profile"), code=302)
+    return "Error generating API key", 500
 
 
 def get_incidents_from_back(page=1):

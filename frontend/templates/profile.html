@@ -2,54 +2,77 @@
 
 {% block content %}
 <h1>Profile</h1>
-<div class="d-flex mt-5 mb-5">
-    <div class="d-flex me-5">
+<div class="row">
+    <div class="col-3">
         <img src="https://i.kym-cdn.com/photos/images/original/002/901/902/95c.png" alt="Profile picture" width="200"
             height="200" class="rounded border border-3 border-primary me-5">
     </div>
-    <div class="d-flex flex-column me-5 justify-content-evenly ">
-        <h2>User information</h2>
+    <div class="col">
         <div>
-            First name: {{ user.firstName }}
+            <h2>User information</h2>
+            <div>
+                First name: {{ user.firstName }}
+            </div>
+            <div>
+                Last name: {{ user.lastName }}
+            </div>
+            <div>
+                Email: {{ user.email }}
+            </div>
+            <!-- Delete profile button -->
+            <form action="{{ url_for('delete_profile') }}" method="post">
+                <button type="submit" class="btn btn-danger mt-3">Delete profile</button>
+            </form>
         </div>
-        <div>
-            Last name: {{ user.lastName }}
-        </div>
-        <div>
-            Email: {{ user.email }}
-        </div>
-        <!-- Delete profile button -->
-        <form action="{{ url_for('delete_profile') }}" method="post">
-            <button type="submit" class="btn btn-danger mt-3">Delete profile</button>
+    </div>
+    <div class="col">
+        <h2>API Key</h2>
+        <form action="{{ url_for('generate_api_key') }}" method="post">
+            <div class="d-flex flex-column">
+                <div class="d-inline-flex align-items-center">
+                    <input type="text" class="form-control me-3" disabled="true" value="{{ user.api_key }}" readonly>
+                    <button type="submit" class="btn btn-primary">
+                        Generate
+                    </button>
+                </div>
+                <small class="form-text text-muted mt-1">
+                    This key is used to authorize your requests to the public API.
+                </small>
+            </div>
         </form>
+
+
     </div>
 </div>
-<div>
+<div class="mt-5">
     <h2>⭐ Favorite incidents</h2>
     <!-- Favourite incidents as cards -->
     <div class="row">
         {% for incident in favorites %}
         <div class="col-sm-4 mb-2 mt-2 mb-sm-0" style="height: 200px;">
-            <div class="card bg-secondary-subtle text-secondary-subtle mh-100 h-100 border border-3 border-secondary-subtle">
+            <div
+                class="card bg-secondary-subtle text-secondary-subtle mh-100 h-100 border border-3 border-secondary-subtle">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
                         <h5 class="card-title">{{ incident.name }}</h5>
                         <!-- Restricting description height -->
-                        <p class="card-text" style="max-height: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <p class="card-text"
+                            style="max-height: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             {{ incident.description }}
                         </p>
                     </div>
                     <!-- Button to remove the incident and view at the right of the card -->
                     <div class="d-inline align-self-end">
                         <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-primary">View</a>
-                        <form action="{{ url_for('remove_favorite', incident_id=incident.id) }}" method="post" class="d-inline">
+                        <form action="{{ url_for('remove_favorite', incident_id=incident.id) }}" method="post"
+                            class="d-inline">
                             <button type="submit" class="btn btn-danger">Unfavorite</button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         {% endfor %}
     </div>
 </div>

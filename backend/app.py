@@ -8,12 +8,17 @@ import json
 from mfulde_dataset_parser import parse_csv_string
 import bcrypt
 import re
+import secrets
+from base64 import b64encode, b64decode
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 DEFAULT_PAGE = 1
 DEFAULT_LIMIT = 10
 DEFAULT_SORT_FIELD = "modified"
 DEFAULT_SORT_ORDER = "desc"
+API_KEY_SEPARATOR = "."
+API_KEY_RANDOM_LENGTH = 32
+API_KEY_IDENTIFIER = "DISINFOX"
 
 load_dotenv()
 app = Flask(__name__)
@@ -143,6 +148,35 @@ def remove_favourite(user_id, incident_id):
         users.update_one({"email": user_id}, {"$set": {"favoriteIncidents": user["favoriteIncidents"]}})
         return jsonify({"message": "Incident removed from favourites"}), 200
     return jsonify({"message": "Incident not in favourites"}), 200
+
+@app.route('/users/<user_id>/generate-api-key', methods=['POST'])
+def generate_api_key(user_id):
+    # Generate an API key for a user
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    # Random API key
+    email64 = b64encode(user_id.encode('utf-8')).decode('utf-8')
+    api_key = API_KEY_SEPARATOR.join([API_KEY_IDENTIFIER, email64, secrets.token_urlsafe(API_KEY_RANDOM_LENGTH)])
+    users.update_one({"email": user_id}, {"$set": {"api_key": api_key}})
+    return jsonify({"message": "API key generated successfully", "api_key": api_key}), 201
+
+@app.route('/check-api-key', methods=['POST'])
+def check_api_key():
+    # Get the API key from the form data
+    # Check if an API key is valid
+    api_key = request.form.get("api_key")
+    if not api_key:
+        app.logger.info("No API key provided")
+        return jsonify({'message': 'Please provide the api_key parameter'}), 400
+    separated_key = api_key.split(API_KEY_SEPARATOR)
+    user = users.find_one({"email": b64decode(separated_key[1]).decode('utf-8')})
+    app.logger.info(f"API user found: {user}, comparing {separated_key[0]} with {API_KEY_IDENTIFIER} and {user['api_key']} with {separated_key[2]}")
+
+    if not API_KEY_IDENTIFIER == separated_key[0] or not user or not user["api_key"] == api_key:
+        return jsonify({"message": "Invalid API key"}), 401
+    return jsonify({"message": "Valid API key"}), 200
+
 
 # Incident upload endpoint
 @app.route('/incidents', methods=['POST'])
