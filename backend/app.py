@@ -12,6 +12,8 @@ import re
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 DEFAULT_PAGE = 1
 DEFAULT_LIMIT = 10
+DEFAULT_SORT_FIELD = "modified"
+DEFAULT_SORT_ORDER = "desc"
 
 load_dotenv()
 app = Flask(__name__)
@@ -161,10 +163,14 @@ def save_incident():
 def get_incidents():
     page = request.args.get('page', default=DEFAULT_PAGE, type=int)
     limit = request.args.get('limit', default=DEFAULT_LIMIT, type=int)
+    sort_field = request.args.get('sort', default=DEFAULT_SORT_FIELD, type=str)
+    sort_order = request.args.get('order', default=DEFAULT_SORT_ORDER, type=str)
 
     # Query to fetch only "intrusion-set" type incidents
     total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
+    # Fetch the incidents from the database
     incidents_cursor = stix2_objects.find({"type": "intrusion-set"})
+    incidents_cursor.sort(sort_field, -1 if sort_order == "desc" else 1)
     
     # Apply pagination
     incidents = list(incidents_cursor.skip((page - 1) * limit).limit(limit))
