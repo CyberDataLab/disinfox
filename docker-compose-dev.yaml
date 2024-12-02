@@ -62,6 +62,21 @@ services:
     volumes:
       - ./frontend:/app
 
+  public-api:
+    build: ./public-api
+    container_name: ${PUBLIC_API_CONTAINER_NAME}
+    ports:
+      - "8080:${PUBLIC_API_FLASK_PORT}"
+    depends_on:
+      - backend
+    restart: always # this prevents a startup failure (becouse of backend not being ready)
+    environment:
+      - FLASK_RUN_PORT=${PUBLIC_API_FLASK_PORT}
+      - DISINFOX_BACKEND_URL=http://${BACKEND_CONTAINER_NAME}:${BACKEND_FLASK_PORT}/
+      - FLASK_DEBUG=1
+    volumes:
+      - ./public-api:/app
+
 
 volumes:
   mongo-data:
