@@ -21,14 +21,20 @@
     <tbody>
         {% for incident in incidents %}
         <tr>
-            <td class="text-truncate name" style="word-wrap: break-word; min-width: 20px; max-width: 200px;">
-                {{ incident.name }}
+            <td class="text-truncate name" style="word-wrap: break-word; max-width: 300px;">
+                <div>
+                    {{ incident.name }}
+                </div>
+                <div>
+                    <small class="text-muted">
+                        {{ incident.id }}
+                    </small>
             </td>
             <!-- We just show the first 200 characters of the description -->
-            <td class="text-truncate description" style="word-wrap: break-word; min-width: 20px; max-width: 400px;">
+            <td class="text-truncate description" style="word-wrap: break-word; min-width: 20px; max-width: 500px;">
                 {{ incident.description }}
             </td>
-            <td>{{ incident.date }}</td>
+            <td>{{ incident.first_seen }}</td>
             <td>
                 <!-- Button to trigger modal -->
                 <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-info">View</a>

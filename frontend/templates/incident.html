@@ -450,7 +450,7 @@
         currentIncidentId = incidentId;
         //Map
         initializeMap(); // Initialize map with default coordinates
-        fillCalendar("{{ incident.created }}");
+        fillCalendar("{{ incident.first_seen }}");
         let threatActorsNumber = 0;
         let techniquesNumber = 0;
         let relationshipNumber = 0;
