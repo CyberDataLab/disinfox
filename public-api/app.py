@@ -44,7 +44,7 @@ def incidents():
     response = requests.post(BACKEND_ROOT + 'check-api-key', data={'api_key': token})
     newer_than = request.args.get('newer_than', default=None)
     if not newer_than:
-        return jsonify({'message': 'Please provide a newer_than parameter, e.g. /incidents?newer_than=2024-11-30T01:35:21.128381Z'})
+        return jsonify({'message': 'Please provide a newer_than parameter, e.g. /incidents?newer_than=2024-11-30T01:35:21.128381Z'}), 400
     app.logger.info("Getting incidents from DISINFOX backend newer than: " + newer_than)
     response = requests.get(BACKEND_ROOT + 'incidents', params={'newer_than': newer_than})
     app.logger.info("Response from DISINFOX backend: " + response.text)
