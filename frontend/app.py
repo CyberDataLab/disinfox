@@ -147,6 +147,7 @@ def incidents():
                             npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
 
 @app.route("/incidents/<incident_id>", methods=["GET"])
+@login_required
 def incident(incident_id):
     response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
     if response.status_code != 200:
