@@ -2,8 +2,6 @@ services:
   mongodb:
     image: mongo:latest
     container_name: ${MONGODB_CONTAINER_NAME}
-    ports:
-      - "27017:27017"
     volumes:
       - mongo-data:${MONGODB_DATA_PATH}
     environment:
@@ -14,8 +12,6 @@ services:
   backend:
     build: ./backend
     container_name: ${BACKEND_CONTAINER_NAME}
-    ports:
-      - "88:${BACKEND_FLASK_PORT}"
     depends_on:
       - mongodb
     restart: always # this prevents a startup failure (becouse of mongodb not being ready)
