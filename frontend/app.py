@@ -152,8 +152,11 @@ def incident(incident_id):
     response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
     if response.status_code != 200:
         return "Error retrieving incident", 500
+    favorited = False
+    if requests.get(BACKEND_ROOT + "users/" + current_user.email + "/favorites/" + incident_id).status_code == 200:
+        favorited = True
     incident = response.json()
-    return render_template("incident.html", incident=incident)
+    return render_template("incident.html", incident=incident, favorited=favorited)
 
 @app.route("/incidents/new", methods=["GET", "POST"])
 @login_required
