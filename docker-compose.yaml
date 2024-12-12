@@ -1,7 +1,6 @@
 services:
   mongodb:
     image: mongo:latest
-    container_name: ${MONGODB_CONTAINER_NAME}
     volumes:
       - mongo-data:${MONGODB_DATA_PATH}
     environment:
@@ -11,13 +10,11 @@ services:
 
   backend:
     build: ./backend
-    container_name: ${BACKEND_CONTAINER_NAME}
     depends_on:
       - mongodb
     restart: always # this prevents a startup failure (becouse of mongodb not being ready)
     environment:
-      - FLASK_RUN_PORT=${BACKEND_FLASK_PORT}
-      - MONGODB_HOST=${MONGODB_CONTAINER_NAME}
+      - MONGODB_HOST=mongodb
       - MONGODB_PORT=${MONGODB_PORT}
       - MONGODB_DB=${MONGODB_DB}
       - MONGODB_USERNAME=${MONGODB_USERNAME}
@@ -26,30 +23,25 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: ${FRONTEND_CONTAINER_NAME}
     ports:
-      - "80:${FRONTEND_FLASK_PORT}"
+      - "${FRONTEND_EXTERNAL_PORT}:5000"
     depends_on:
       - backend
     restart: always # this prevents a startup failure (becouse of backend not being ready)
     environment:
-      - FLASK_RUN_PORT=${FRONTEND_FLASK_PORT}
-      - BACKEND_HOST=${BACKEND_CONTAINER_NAME}
-      - BACKEND_PORT=${BACKEND_FLASK_PORT}
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=5000
 
   public-api:
     build: ./public-api
-    container_name: ${PUBLIC_API_CONTAINER_NAME}
     ports:
-      - "8080:${PUBLIC_API_FLASK_PORT}"
+      - "${PUBLIC_API_EXTERNAL_PORT}:5000"
     depends_on:
       - backend
     restart: always # this prevents a startup failure (becouse of backend not being ready)
     environment:
-      - FLASK_RUN_PORT=${PUBLIC_API_FLASK_PORT}
-      - BACKEND_HOST=${BACKEND_CONTAINER_NAME}
-      - BACKEND_PORT=${BACKEND_FLASK_PORT}
-      - FLASK_DEBUG=1
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=5000
     volumes:
       - ./public-api:/app
 
