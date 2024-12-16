@@ -23,7 +23,8 @@ def build_objects(csv_df):
 
         # Now get year, target, event, origin, threat actor, and event description.
         year = row['Year']
-        target_country = row['Target Country']
+
+        target_countries = row['Target Country'].split(',\s*')
         event = row['Event']
         region = row['Region']
         sub_region = row['Sub-region']
@@ -54,7 +55,7 @@ def build_objects(csv_df):
         # Append the incident to the incidents list
         incidents.append({
             'year': year,
-            'target_country': target_country,
+            'target_countries': target_countries,
             'event': event,
             'region': region,
             'sub_region': sub_region,
