@@ -178,7 +178,7 @@ def new_incident():
 
     # get jsoned form data
     form = incident_form.data
-    app.logger.info(form)   
+    app.logger.info("New manual incident: "+ str(form))   
 
     backend_request = request.form.to_dict(flat=False)
     backend_request["event"] = backend_request["event"][0]
@@ -188,6 +188,8 @@ def new_incident():
     if response.status_code == 201:
         # redirect to the incidents page and alert the user
         return  redirect(url_for("incidents"), code=302)
+    elif response.status_code == 409:
+        return "Incident already exists", 409
     else:
         return "Error creating incident", 500
     

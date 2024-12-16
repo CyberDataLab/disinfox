@@ -183,10 +183,18 @@ def check_api_key():
 def save_incident():
     # Map the JSON fields (non STIX) and build the STIX2 objects and relationships
     incident_data = request.json
-    stix_objects = build_stix_objects(incident_data, disarm_stix2)
+    id, stix_objects = build_stix_objects(incident_data, disarm_stix2)
+    # Check if the incident already exists
+    exist = stix2_objects.find_one({"id": id})
+    if exist:
+        return jsonify({"message": "Incident already exists (same name and description)"}), 409
     # Save the serialized STIX2 objects in the database as a document
     for stix_object in stix_objects:
         serialized = stix_object.serialize()
+        # If the object already exists, skip it
+        isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
+        if isRepeated:
+            continue
         stix2_objects.insert_one(json.loads(serialized))
 
     return jsonify({"message": "Incident saved successfully"}), 201
@@ -401,8 +409,8 @@ def build_stix_objects(incident_data, disarm_stix2):
     # Create a IntrusionSet object to represent the incident
     intrusion_name = incident_data['event']
     intrusion_description = incident_data['event_description']
-    # Transform the year to a date
-    incident_first_seen = str(incident_data.get('year')) + "-01-01T00:00:00Z"
+    # Transform the date (dd-mm-yyyy) to a STIX2 datetime format
+    incident_first_seen = str(incident_data.get('date')) + "T00:00:00Z"
     # Eliminar todo excepto caracteres de la a-Z
     normal_name = re.sub(r'[^a-zA-Z0-9]', '', intrusion_name)
     normal_description = re.sub(r'[^a-zA-Z0-9]', '', intrusion_description)
@@ -433,7 +441,7 @@ def build_stix_objects(incident_data, disarm_stix2):
     for country in location_objects:
         stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="targets", target_ref=country.id))
 
-    return stix_objects
+    return intrusion_object.id, stix_objects
 
 def build_paginated_json(objects, page, limit, total_objects, endpoint_function, objects_name="objects"):
     # Construct HATEOAS links
