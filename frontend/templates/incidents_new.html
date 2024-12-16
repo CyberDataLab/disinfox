@@ -81,6 +81,7 @@
                         callback(options);
                     })
                     .catch(() => {
+                        options.push({ value: query, text: query });
                         callback();
                     });
             },

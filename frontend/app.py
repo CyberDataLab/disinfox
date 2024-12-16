@@ -265,14 +265,18 @@ def threat_actor(ta_id):
 
 @app.route('/api/threat-actors', methods=['GET'])
 def get_threat_actors():
-    # dummy threat actor example
-    threat_actors = ["Russia State", "China State", "Iran State", "North Korea State", "USA State", "Wagner", "APT28", "APT29", "APT30", "APT31", "APT32", "APT33", "APT34", "APT35", "APT36", "APT37", "APT38", "APT39", "APT40", "APT41", "APT42", "APT43", "APT44", "APT45", "APT46", "APT47", "APT48", "APT49", "APT50", "APT51", "APT52", "APT53", "APT54", "APT55", "APT56", "APT57", "APT58", "APT59", "APT60", "APT61", "APT62", "APT63", "APT64", "APT65", "APT66", "APT67", "APT68", "APT69", "APT70", "APT71", "APT72", "APT73", "APT74", "APT75", "APT76", "APT77", "APT78", "APT79", "APT80", "APT81", "APT82", "APT83", "APT84", "APT85", "APT86", "APT87", "APT88", "APT89", "APT90", "APT91", "APT92", "APT93", "APT94", "APT95", "APT96", "APT97", "APT98", "APT99", "APT100"]
-    search = request.args.get('search')
-    if search:
-        threat_actors = [actor for actor in threat_actors if search.lower() in actor.lower()]
+    search = request.args.get('query', None)
+    if not search:
+        return jsonify([]), 400
+    
+    # get the threat actors from the backend
+    response = requests.get(BACKEND_ROOT + "threat-actors", params={"q": search})
+    if response.status_code != 200:
+        return jsonify([]), 500
+    threat_actors = response.json().get("threat_actors", [])
 
-    # return a reduced list of threat actors
-    return jsonify(threat_actors[:10]), 200
+    # return just the name and id of the threat actors
+    return jsonify([ta["name"] for ta in threat_actors]), 200
 
 @app.route('/api/incident-details/<incident_id>', methods=['GET'])
 @login_required

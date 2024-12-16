@@ -302,12 +302,19 @@ def neighbors(stix_id):
 @app.route('/threat-actors', methods=['GET','POST'])
 def threat_actors():
     if request.method == "GET":
+        query = request.args.get('q', default="", type=str)
         page = request.args.get('page', default=DEFAULT_PAGE, type=int)
         limit = request.args.get('limit', default=DEFAULT_LIMIT, type=int)
         # Query to fetch only "intrusion-set" type incidents
         stix_type = "threat-actor"
-        total_threat_actors = stix2_objects.count_documents({"type": stix_type })
-        threat_actors_cursor = stix2_objects.find({"type": stix_type })
+        # Now we search threat actors type objects that match the query in the name field
+
+        if query:
+            total_threat_actors = stix2_objects.count_documents({"type": stix_type, "name": {"$regex": query, "$options": "i"}})
+            threat_actors_cursor = stix2_objects.find({"type": stix_type, "name": {"$regex": query, "$options": "i"}})
+        else:
+            total_threat_actors = stix2_objects.count_documents({"type": stix_type})
+            threat_actors_cursor = stix2_objects.find({"type": stix_type})
         app.logger.info(f"Retrieved {total_threat_actors} Threat Actors")
         
         # Apply pagination
