@@ -54,7 +54,7 @@ def build_objects(csv_df):
 
         # Append the incident to the incidents list
         incidents.append({
-            'year': year,
+            'date': year+'-01-01T00:00:00Z',
             'target_countries': target_countries,
             'event': event,
             'region': region,
