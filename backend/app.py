@@ -183,7 +183,7 @@ def check_api_key():
 def save_incident():
     # Map the JSON fields (non STIX) and build the STIX2 objects and relationships
     incident_data = request.json
-    id, stix_objects = build_stix_objects(incident_data, disarm_stix2)
+    stix_objects, id = build_stix_objects(incident_data, disarm_stix2)
     # Check if the incident already exists
     exist = stix2_objects.find_one({"id": id})
     if exist:
@@ -250,7 +250,6 @@ def save_bulk_incidents():
     # If CSV (content-type: text/csv) we parse the CSV and build the STIX2 objects
     if ftype in ['text/csv','application/vnd.ms-excel']:
         csv_string = request.files['file'].read().decode('utf-8')
-        app.logger.info(f"Received CSV: {csv_string}")
         incidents = parse_csv_string(csv_string)
     elif ftype == 'application/json':
         incidents = request.json
@@ -260,7 +259,7 @@ def save_bulk_incidents():
     app.logger.info(f"Received {len(incidents)} incidents")
     repeated = []
     for incident in incidents:
-        stix_objects = build_stix_objects(incident, disarm_stix2)
+        stix_objects, intrusionid = build_stix_objects(incident, disarm_stix2)
         for stix_object in stix_objects:
             isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
             if isRepeated:
@@ -410,7 +409,7 @@ def build_stix_objects(incident_data, disarm_stix2):
     intrusion_name = incident_data['event']
     intrusion_description = incident_data['event_description']
     # Transform the date (dd-mm-yyyy) to a STIX2 datetime format
-    incident_first_seen = str(incident_data.get('date')) + "T00:00:00Z"
+    incident_first_seen = incident_data.get('date') + "T00:00:00.000Z"
     # Eliminar todo excepto caracteres de la a-Z
     normal_name = re.sub(r'[^a-zA-Z0-9]', '', intrusion_name)
     normal_description = re.sub(r'[^a-zA-Z0-9]', '', intrusion_description)
@@ -441,7 +440,7 @@ def build_stix_objects(incident_data, disarm_stix2):
     for country in location_objects:
         stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="targets", target_ref=country.id))
 
-    return intrusion_object.id, stix_objects
+    return  stix_objects, intrusion_object.id
 
 def build_paginated_json(objects, page, limit, total_objects, endpoint_function, objects_name="objects"):
     # Construct HATEOAS links

@@ -22,9 +22,12 @@ def build_objects(csv_df):
     for index, row in df.iterrows():
 
         # Now get year, target, event, origin, threat actor, and event description.
-        year = row['Year']
-
-        target_countries = row['Target Country'].split(',\s*')
+        year = row.get('Year')
+        if pd.isna(year):
+            date = '0000-01-01'
+        else:
+            date = str(int(year))+ '-01-01'
+        target_countries = str(row['Target Country']) 
         event = row['Event']
         region = row['Region']
         sub_region = row['Sub-region']
@@ -54,13 +57,13 @@ def build_objects(csv_df):
 
         # Append the incident to the incidents list
         incidents.append({
-            'date': year+'-01-01T00:00:00Z',
-            'target_countries': target_countries,
+            'date': date,
+            'target_countries': target_countries.split(',\s*'),
             'event': event,
             'region': region,
             'sub_region': sub_region,
             'country_of_origin': country_of_origin,
-            'threat_actor': threat_actor,
+            'threat_actors': threat_actor.split(',\s*'),
             'event_description': event_description,
             'techniques': techniques,
             'channels': channels,
