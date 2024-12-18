@@ -1,6 +1,9 @@
 import pandas as pd
 from io import StringIO
 
+import re
+RE_COMMAANDSPACE = re.compile(r'\s*,\s*')
+
 
 def parse_csv_file(csv_path):
     # We read the CSV from a file
@@ -27,7 +30,7 @@ def build_objects(csv_df):
             date = '0000-01-01'
         else:
             date = str(int(year))+ '-01-01'
-        target_countries = str(row['Target Country']) 
+        target_country = str(row['Target Country']) 
         event = row['Event']
         region = row['Region']
         sub_region = row['Sub-region']
@@ -58,12 +61,12 @@ def build_objects(csv_df):
         # Append the incident to the incidents list
         incidents.append({
             'date': date,
-            'target_countries': target_countries.split(',\s*'),
+            'target_countries': re.split(RE_COMMAANDSPACE, target_country),
             'event': event,
             'region': region,
             'sub_region': sub_region,
             'country_of_origin': country_of_origin,
-            'threat_actors': threat_actor.split(',\s*'),
+            'threat_actors': re.split(RE_COMMAANDSPACE, threat_actor),
             'event_description': event_description,
             'techniques': techniques,
             'channels': channels,
