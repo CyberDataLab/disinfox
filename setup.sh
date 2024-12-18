@@ -24,11 +24,12 @@ if [ "$1" == "--destroy" ]; then
     fi
     # check if the database has correctly been removed from the docker volumes
     if [ "$(docker volume ls | grep -c 'disinfox_mongo-data')" -eq 0 ]; then
-        echo "Database volume has been removed"
+        echo "[SETUP] [OK] Database volume has been removed"
     else
-        echo "Database volume has not been removed"
+        echo "[SETUP] Database volume has not been removed"
     fi
 
 fi
 docker compose up --build -d
+echo "[SETUP] Running setup.py to populate the database"
 docker compose exec backend python3 setup.py
