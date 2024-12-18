@@ -9,18 +9,10 @@ FILENAME_SEPARATOR = '_'
 DATE_FORMAT = '%Y%m%d'
 FOOTER_TEXT = "Generated on {date} by DISINFOX 🦊"
 WEBSITE_TEXT = "https://disinfox.um.es"
+INTERSECTION_VERTICAL_SPACING = 5
 
-def draw_footer(canvas, doc):
-    """
-    Function to draw the footer in the PDF
-    """
-    canvas.saveState()
-    footer_text = FOOTER_TEXT.format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    website_text = WEBSITE_TEXT
-    canvas.setFont('Helvetica', 10)
-    canvas.drawString(30, 30, footer_text)
-    canvas.drawString(30, 20, website_text)
-    canvas.restoreState()
+
+
 
 
 
@@ -42,7 +34,11 @@ def export_incident_to_pdf(incident_stix_bundle):
     styles = getSampleStyleSheet()
     title_style = styles['Heading1']
     normal_style = styles['Normal']
-    bold_style = ParagraphStyle('Bold', parent=normal_style, fontName='Helvetica-Bold')
+    normal_style.leftIndent = 0  # Remove left indentation
+    normal_style.firstLineIndent = 0  # Remove first-line indentation
+    normal_style.spaceBefore = 0  # Remove space before the paragraph
+    normal_style.spaceAfter = 0  # Remove space after the paragraph
+    section_title_style = styles['Heading2']
     
     # Contenedor para los elementos del PDF
     elements = []
@@ -88,10 +84,11 @@ def export_incident_to_pdf(incident_stix_bundle):
     # Tabla de Intrusion Set
     if incident:
         data = [
-            ['Name', incident.get('name', '')],
-            ['Date', incident.get('created', '')],
+            ['Name', Paragraph(incident.get('name', ''), normal_style)],
+            ['Date', Paragraph(incident.get('first_seen', ''), normal_style)],
         ]
-        table = Table(data, colWidths=[100, 450])
+        # table that wraps the data
+        table = Table(data, colWidths=[100, doc.width-100])
         table.setStyle(TableStyle([
             # Fox-like color
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#FFA500')),
@@ -103,30 +100,41 @@ def export_incident_to_pdf(incident_stix_bundle):
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
         ]))
         elements.append(table)
-        elements.append(Spacer(1, 24))
+        elements.append(Spacer(0, 24))
     # Descripción del incidente
-    elements.append(Paragraph("Description:", bold_style))
+    elements.append(Paragraph("Description:", section_title_style))
     elements.append(Paragraph(incident.get('description', ''), normal_style))
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(0, INTERSECTION_VERTICAL_SPACING))
     
     # Lista de Locations
     if locations:
-        elements.append(Paragraph("Locations:", bold_style))
+        elements.append(Paragraph("Locations:", section_title_style))
         elements.append(Paragraph(", ".join(locations), normal_style))
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(0, INTERSECTION_VERTICAL_SPACING))
     
     # Lista de Threat Actors
     if threat_actors:
-        elements.append(Paragraph("Threat Actors:", bold_style))
+        elements.append(Paragraph("Threat Actors:", section_title_style))
         elements.append(Paragraph(", ".join(threat_actors), normal_style))
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(0, INTERSECTION_VERTICAL_SPACING))
     
     # Lista de Attack Patterns
     if attack_patterns:
-        elements.append(Paragraph("Attack Patterns:", bold_style))
+        elements.append(Paragraph("Attack Patterns:", section_title_style))
         elements.append(Paragraph(", ".join(attack_patterns), normal_style))
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(0, INTERSECTION_VERTICAL_SPACING))
     
+    def draw_footer(canvas, doc):
+        """
+        Function to draw the footer in the PDF
+        """
+        canvas.saveState()
+        footer_text = FOOTER_TEXT.format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        website_text = WEBSITE_TEXT
+        canvas.setFont('Helvetica', 10)
+        canvas.drawString(30, 30, footer_text)
+        canvas.drawString(30, 20, website_text)
+        canvas.restoreState()
     # Construir el PDF# Construir el PDF con el footer
     doc.build(elements, onFirstPage=draw_footer, onLaterPages=draw_footer)
     return io.getvalue()

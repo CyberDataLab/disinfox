@@ -196,12 +196,14 @@ def new_incident():
 @app.route("/incidents/<incident_id>/export", methods=["GET"])
 def export_incident(incident_id):
     try:
-        response = requests.get(BACKEND_ROOT + f"incidents/{incident_id}")
-        if response.status_code == 200:
-            incident = response.json()
+        response = requests.get(BACKEND_ROOT + f"neighbors/{incident_id}")
+        if response.status_code != 200:
+            return "Error getting neighbors", 500
+        incident = response.json()
     except:
-        pass
+        return "Error getting incident", 500
     app.logger.info(incident)
+
     pdf = export_incident_to_pdf(incident)
     if pdf is None:
         return "Error exporting incident", 500
