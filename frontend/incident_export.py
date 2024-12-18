@@ -2,6 +2,10 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+
+from docx import Document
+from docx.shared import Pt, Inches
+
 from datetime import datetime
 from io import BytesIO
 
@@ -138,3 +142,93 @@ def export_incident_to_pdf(incident_stix_bundle):
     # Construir el PDF# Construir el PDF con el footer
     doc.build(elements, onFirstPage=draw_footer, onLaterPages=draw_footer)
     return io.getvalue()
+
+
+
+def export_incident_to_word(incident_stix_bundle):
+    """
+    Export an STIX2 disinformation incident to a Word document.
+    """
+    # Create a new Word document
+    doc = Document()
+
+    # Title and logo (header)
+    table = doc.add_table(rows=1, cols=2)
+    table.autofit = False
+    row = table.rows[0]
+    title_cell = row.cells[0]
+    logo_cell = row.cells[1]
+
+    # Add title
+    title_cell.text = "Incident Report"
+    title_cell.paragraphs[0].style.font.size = Pt(16)
+    title_cell.paragraphs[0].style.font.bold = True
+
+    # Add logo (optional)
+    try:
+        logo_cell.add_paragraph().add_run().add_picture("static/images/logo.png", width=Inches(1.5))
+    except FileNotFoundError:
+        logo_cell.text = "Logo Missing"
+
+    # Set alignment
+    title_cell.paragraphs[0].alignment = 0  # Left align
+    logo_cell.paragraphs[0].alignment = 2  # Right align
+
+    # Process STIX bundle
+    incident = {}
+    threat_actors = []
+    locations = []
+    attack_patterns = []
+
+    for stix_object in incident_stix_bundle.get('objects', []):
+        if stix_object['type'] == 'intrusion-set':
+            incident = stix_object
+        elif stix_object['type'] == 'threat-actor':
+            threat_actors.append(stix_object.get('name', ''))
+        elif stix_object['type'] == 'location':
+            locations.append(stix_object.get('name', ''))
+        elif stix_object['type'] == 'attack-pattern':
+            attack_patterns.append(stix_object.get('name', ''))
+
+    # Add Incident Details Table
+    if incident:
+        doc.add_heading("Incident Details", level=2)
+        table = doc.add_table(rows=2, cols=2)
+        table.style = "Table Grid"
+        table.cell(0, 0).text = "Name"
+        table.cell(0, 1).text = incident.get('name', '')
+        table.cell(1, 0).text = "Date"
+        table.cell(1, 1).text = incident.get('first_seen', '')
+
+    # Add Description Section
+    doc.add_heading("Description:", level=2)
+    doc.add_paragraph(incident.get('description', ''))
+
+    # Add Locations
+    if locations:
+        doc.add_heading("Locations:", level=2)
+        doc.add_paragraph(", ".join(locations))
+
+    # Add Threat Actors
+    if threat_actors:
+        doc.add_heading("Threat Actors:", level=2)
+        doc.add_paragraph(", ".join(threat_actors))
+
+    # Add Attack Patterns
+    if attack_patterns:
+        doc.add_heading("Attack Patterns:", level=2)
+        doc.add_paragraph(", ".join(attack_patterns))
+
+    # Draw Footer
+    section = doc.sections[-1]
+    footer = section.footer
+    footer_paragraph = footer.paragraphs[0]
+    footer_text = footer_text = FOOTER_TEXT.format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    footer_paragraph.text = f"{footer_text}\n{WEBSITE_TEXT}"
+    footer_paragraph.style.font.size = Pt(10)
+
+    # Save Document
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)  # Posicionar el puntero al inicio del buffer
+    return buffer.getvalue()

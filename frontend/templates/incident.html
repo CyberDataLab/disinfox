@@ -315,6 +315,12 @@
             <div class="d-flex justify-content-between">
                 <button class="btn btn-success" onclick="exportToPdf()">🖨️ PDF</button>
             </div>
+            <div class="d-flex justify-content-between mt-3">
+                <form action="{{ url_for('export_incident', incident_id=incident.id) }}" method="get">
+                    <input id="doc_type" type="hidden" name="type" value="docx">
+                    <button type="submit" class="btn btn-success">📄 DOCX</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

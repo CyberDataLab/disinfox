@@ -5,7 +5,7 @@ import os
 import json
 from flask_bootstrap import Bootstrap5
 from forms import IncidentForm, FileUploadForm, LoginForm, RegisterForm
-from incident_export import export_incident_to_pdf
+from incident_export import export_incident_to_pdf, export_incident_to_word
 
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from models import User
@@ -195,6 +195,7 @@ def new_incident():
     
 @app.route("/incidents/<incident_id>/export", methods=["GET"])
 def export_incident(incident_id):
+    doc_type = request.args.get("type")
     try:
         response = requests.get(BACKEND_ROOT + f"neighbors/{incident_id}")
         if response.status_code != 200:
@@ -203,11 +204,25 @@ def export_incident(incident_id):
     except:
         return "Error getting incident", 500
     app.logger.info(incident)
+    content_type = ""
+    extension = ""
+    document_data = None
+    if doc_type == "pdf":
+        document_data = export_incident_to_pdf(incident)
+        if document_data is None:
+            return "Error exporting incident", 500
+        content_type = "application/pdf"
+        extension = "pdf"
+    elif doc_type == "docx":
+        document_data = export_incident_to_word(incident)
+        if document_data is None:
+            return "Error exporting incident", 500
+        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        extension = "docx"
+    else:
+        return "Invalid document type", 400
 
-    pdf = export_incident_to_pdf(incident)
-    if pdf is None:
-        return "Error exporting incident", 500
-    return pdf, 200, {"Content-Type": "application/pdf", "Content-Disposition": f"attachment; filename=incident_{incident_id}.pdf"}
+    return document_data, 200, {"Content-Type": content_type, "Content-Disposition": f"attachment; filename=incident_{incident_id}.{extension}"}
 
 @app.route("/incidents/<incident_id>/favorite", methods=["POST"])
 @login_required
