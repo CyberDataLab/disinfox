@@ -38,6 +38,8 @@ services:
       - MONGODB_DB=${MONGODB_DB}
       - MONGODB_USERNAME=${MONGODB_USERNAME}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
+      - TEST_USER_EMAIL=${TEST_USER_EMAIL}
+      - TEST_USER_PASSWORD=${TEST_USER_PASSWORD}
       - FLASK_DEBUG=1
     volumes:
       - ./backend:/app
