@@ -18,5 +18,12 @@
         <a href="{{ url_for('incidents') }}" class="btn btn-primary m-2">🚨 See the listing</a>
         <a href="{{ url_for('developers') }}" class="btn btn-secondary m-2">💻 I'm a CTI developer!</a>
     </div>
+
+    {% if last_update %}
+    <div class="container mt-5">
+        <p class="lead">Last update</p>
+        <p class="text-muted">{{ last_update }}</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

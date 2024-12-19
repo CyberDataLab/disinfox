@@ -51,7 +51,7 @@ def logout():
 
 @app.route("/", methods=["GET"])
 def home():
-    return render_template("index.html")
+    return render_template("index.html", last_update=os.environ.get("LAST_UPDATE"))
 
 @app.route("/register", methods=["GET", "POST"])
 def register():

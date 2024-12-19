@@ -33,6 +33,7 @@ services:
     environment:
       - BACKEND_HOST=backend
       - BACKEND_PORT=5000
+      - LAST_COMMIT=${LAST_COMMIT}
 
   public-api:
     build: ./public-api
