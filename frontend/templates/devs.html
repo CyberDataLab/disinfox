@@ -2,6 +2,22 @@
 
 {% block content %}
 
-Information for developers...
+<div class="mt-5">
+    <h1>ℹ️ Developer info</h1>
+    If you are a developer, you can use the DISINFOX Public API to interact with the platform. 
+    To use it you need to have an API. You can generate one in your <a href="{{ url_for('profile') }}">profile</a> page.
 
-{% endblock %}
+    Here are the available endpoints:
+    <div class="mt-5">
+        <p class="lead">List all incidents</p>
+        <pre>
+            <code>
+GET /incidents?newer_than=2024-11-30T01:35:21.128381Z HTTP/1.1
+Authorization: &lt;API_KEY&gt;
+        </code>
+        </pre>
+    </div>
+</div>
+
+
+    {% endblock %}
