@@ -218,18 +218,10 @@ def get_incidents():
         total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
         incidents_cursor = stix2_objects.find({"type": "intrusion-set"})
     
-    # Get the total number of incidents
-
     incidents_cursor.sort(sort_field, -1 if sort_order == "desc" else 1)
     
-    # Apply pagination
-    incidents = list(incidents_cursor.skip((page - 1) * limit).limit(limit))
-    # Remove the _id field from the documents
-    for incident in incidents:
-        incident.pop('_id', None)
-
     # Paginate
-    return build_paginated_json(incidents, page, limit, total_incidents, "get_incidents", "incidents"), 200
+    return build_paginated_json(request, incidents_cursor, total_incidents, "incidents"), 200
 
 
 @app.route('/incidents/<incident_id>', methods=['GET'])
@@ -324,12 +316,7 @@ def threat_actors():
             threat_actors_cursor = stix2_objects.find({"type": stix_type})
         app.logger.info(f"Retrieved {total_threat_actors} Threat Actors")
         
-        # Apply pagination
-        threat_actors = list(threat_actors_cursor.skip((page - 1) * limit).limit(limit))
-        # Remove the _id field from the documents
-        for ta in threat_actors:
-            ta.pop('_id', None)
-        return build_paginated_json(threat_actors, page, limit, total_threat_actors, "threat_actors", "threat_actors"), 200
+        return build_paginated_json(request, threat_actors_cursor, total_threat_actors, "threat_actors"), 200
     return "Not implemented", 501
     
 @app.route('/threat-actors/<threat_actor_id>', methods=['GET'])
@@ -442,10 +429,22 @@ def build_stix_objects(incident_data, disarm_stix2):
 
     return  stix_objects, intrusion_object.id
 
-def build_paginated_json(objects, page, limit, total_objects, endpoint_function, objects_name="objects"):
+def build_paginated_json(request, cursor, total_objects, objects_name="objects"):
+    # Pagination parameters
+    page = request.args.get('page', default=DEFAULT_PAGE, type=int)
+    limit = request.args.get('limit', default=DEFAULT_LIMIT, type=int)
+
+    # Apply pagination
+    objects = list(cursor.skip((page - 1) * limit).limit(limit))
+    # Remove the _id field from the documents
+    for object in objects:
+        object.pop('_id', None)
+    
     # Construct HATEOAS links
     def build_url(page):
-        return url_for(endpoint_function, page=page, limit=limit, _external=True)
+        parameters = request.args.copy()
+        parameters['page'] = page
+        return url_for(request.endpoint, **parameters)
 
     # Pagination links
     links = {
