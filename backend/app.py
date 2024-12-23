@@ -444,7 +444,7 @@ def build_paginated_json(request, cursor, total_objects, objects_name="objects")
     def build_url(page):
         parameters = request.args.copy()
         parameters['page'] = page
-        return url_for(request.endpoint, **parameters)
+        return url_for(request.endpoint, **parameters, _external=True)
 
     # Pagination links
     links = {
