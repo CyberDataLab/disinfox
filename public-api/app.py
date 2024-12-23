@@ -41,8 +41,10 @@ def incidents():
     if 'Authorization' not in request.headers:
         return jsonify({'message': 'Please provide an Authorization header with a valid token'})
     token = request.headers['Authorization']
-    response = requests.post(BACKEND_ROOT + 'check-api-key', data={'api_key': token})
     newer_than = request.args.get('newer_than', default=None)
+    response = requests.post(BACKEND_ROOT + 'check-api-key', data={'api_key': token})
+    if response.status_code != 200:
+        return jsonify({'message': 'The token is invalid'}), 401
     if not newer_than:
         return jsonify({'message': 'Please provide a newer_than parameter, e.g. /incidents?newer_than=2024-11-30T01:35:21.128381Z'}), 400
     app.logger.info("Getting incidents from DISINFOX backend newer than: " + newer_than)
