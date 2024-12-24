@@ -327,6 +327,20 @@ def threat_actor(threat_actor_id):
     threat_actor.pop('_id', None)
     return jsonify(threat_actor), 200
 
+@app.route('/stix2-objects', methods=['GET'])
+def stix2_objects_endpoint():
+    # Fetch all the STIX2 objects stored in the database
+    newer_than = request.args.get('newer_than', default=None, type=str)
+    # Fetch the incidents from the database
+    if newer_than:
+        total_objects = stix2_objects.count_documents({"modified": {"$gt": newer_than}})
+        objects_cursor = stix2_objects.find({"modified": {"$gt": newer_than}})
+    else:
+        total_objects = stix2_objects.count_documents({})
+        objects_cursor = stix2_objects.find({})
+    return build_paginated_json(request, objects_cursor, total_objects), 200
+
+
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
 'first_seen': seen_date,

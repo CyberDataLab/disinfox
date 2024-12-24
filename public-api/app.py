@@ -48,11 +48,11 @@ def incidents():
     if not newer_than:
         return jsonify({'message': 'Please provide a newer_than parameter, e.g. /incidents?newer_than=2024-11-30T01:35:21.128381Z'}), 400
     app.logger.info("Getting incidents from DISINFOX backend newer than: " + newer_than)
-    response = requests.get(BACKEND_ROOT + 'incidents', params={'newer_than': newer_than})
+    response = requests.get(BACKEND_ROOT + 'stix2-objects', params={'newer_than': newer_than})
     if response.status_code != 200:
         return jsonify({'message': 'Error getting incidents from the DISINFOX backend server'}), 500
     response_json = response.json()
-    incidents = response_json.get('incidents', [])
+    incidents = response_json.get('objects', [])
     next_link = response_json['links'].get('next', None)
     # Gather all the incidents from the paginated responses
     while next_link:
@@ -60,7 +60,7 @@ def incidents():
         if response.status_code != 200:
             return jsonify({'message': 'Error getting incidents from the DISINFOX backend server'}), 500
         response_json = response.json()
-        incidents.extend(response_json['incidents'])
+        incidents.extend(response_json['objects'])
         next_link = response_json['links'].get('next', None)
     return jsonify({'incidents': incidents})
 
