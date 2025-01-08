@@ -42,6 +42,13 @@ if not alive:
 login_manager.anonymous_user = Anonymous
 
 
+@app.errorhandler(500)
+def internal_server_error(e):
+    if app.config["READONLY"]:
+        return render_template("500readonly.html"), 500
+    else:
+        return jsonify(error=str(e)), 500
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id, BACKEND_ROOT + "users/")
@@ -82,7 +89,7 @@ def login():
     if response.status_code == 401:
         return "Invalid credentials", 401
     if response.status_code != 200:
-        return "Error logging in", 500
+        abort(500)
     user = response.json()
     user = User(form["email"])
     login_user(user)
@@ -96,7 +103,7 @@ def profile():
     elif current_user.is_authenticated:
         user_data_response = requests.get(BACKEND_ROOT + "users/" + current_user.email)
         if user_data_response.status_code != 200:
-            return "Error getting profile", 500
+            return abort(500, description="Error getting profile")
         user_data = user_data.json()
     # Get the data from the favorite incidents id
     favorites = []
@@ -113,7 +120,7 @@ def delete_profile():
     if response.status_code == 200:
         logout_user()
         return redirect(url_for("home"), code=302)
-    return "Error deleting profile", 500
+    return abort(500, description="Error deleting profile")
     
 @app.route("/profile/generate-api-key", methods=["POST"])
 @login_required
@@ -121,7 +128,7 @@ def generate_api_key():
     response = requests.post(BACKEND_ROOT + "users/" + current_user.email + "/generate-api-key")
     if response.status_code == 201:
         return redirect(url_for("profile"), code=302)
-    return "Error generating API key", 500
+    return abort(500, description="Error generating API key")
 
 
 def get_incidents_from_back(page=1):
@@ -162,7 +169,7 @@ def incidents():
 def incident(incident_id):
     response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
     if response.status_code != 200:
-        return "Error retrieving incident", 500
+        return abort(500, description="Error retrieving incident")
     favorited = False
     if current_user.is_anonymous:
         favorited = incident_id in current_user.get_favourite_incidents()
@@ -187,7 +194,7 @@ def new_incident():
         file = file_form.file.data # raw CSV
         response = requests.post(BACKEND_ROOT + "bulk-incident", files={"file": (file.filename, file, file.content_type)})
         if response.status_code != 201:
-            return "Error uploading file", 500
+            return abort(500, description="Error uploading file")
         return "File uploaded successfully", 200
 
     # get jsoned form data
@@ -205,7 +212,7 @@ def new_incident():
     elif response.status_code == 409:
         return "Incident already exists", 409
     else:
-        return "Error creating incident", 500
+        return abort(500, description="Error creating incident")
     
 @app.route("/incidents/<incident_id>/export", methods=["GET"])
 def export_incident(incident_id):
@@ -213,10 +220,10 @@ def export_incident(incident_id):
     try:
         response = requests.get(BACKEND_ROOT + f"neighbors/{incident_id}")
         if response.status_code != 200:
-            return "Error getting neighbors", 500
+            return abort(500, description="Error getting neighbors")
         incident = response.json()
     except:
-        return "Error getting incident", 500
+        return abort(500, description="Error getting incident")
     app.logger.info(incident)
     content_type = ""
     extension = ""
@@ -224,13 +231,13 @@ def export_incident(incident_id):
     if doc_type == "pdf":
         document_data = export_incident_to_pdf(incident)
         if document_data is None:
-            return "Error exporting incident", 500
+            return abort(500, description="Error exporting incident")
         content_type = "application/pdf"
         extension = "pdf"
     elif doc_type == "docx":
         document_data = export_incident_to_word(incident)
         if document_data is None:
-            return "Error exporting incident", 500
+            return abort(500, description="Error exporting incident")
         content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         extension = "docx"
     else:
@@ -261,9 +268,9 @@ def toggle_favorite(incident_id):
             elif response.status_code == 404:
                 favorite = False
             else:
-                return "Error getting favorites", 500
+                return abort(500, description="Error getting favorites")
         except:
-            return "Error getting favorites", 500
+            return abort(500, description="Error getting favorites")
         
         if favorite:
             response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
@@ -272,7 +279,7 @@ def toggle_favorite(incident_id):
             response = requests.post(BACKEND_ROOT + f"users/{current_user.email}/favorites", json={"incident_id": incident_id})
             favorite = True
         if response.status_code != 200:
-            return "Error toggling favorite", 500
+            return abort(500, description="Error toggling favorite")
         
     return jsonify({"favorite": favorite}), 200
 
@@ -284,7 +291,7 @@ def remove_favorite(incident_id):
     elif current_user.is_authenticated:
         response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
         if response.status_code != 200:
-            return "Error deleting favorite", 500
+            return abort(500, description="Error deleting favorite")
     return redirect(url_for("profile"), code=302)
 
 @app.route("/threat-actors/", methods=["GET", "POST"])
@@ -294,7 +301,7 @@ def threat_actors():
         page = request.args.get("page", 1, type=int)
         response = requests.get(BACKEND_ROOT + "threat-actors", params={"page": page, "limit": LISTING_LIMIT})
         if response.status_code != 200:
-            "Error retrieving Threat Actors", 500
+            abort(500, description="Error retrieving Threat Actors")
         response_json = response.json()
         app.logger.info(response_json)
         npages = response_json.get("total_threat_actors", 0) // response_json.get("limit", LISTING_LIMIT) + 1
@@ -307,7 +314,7 @@ def threat_actors():
 def threat_actor(ta_id):
     response = requests.get(BACKEND_ROOT + "threat-actors/" + ta_id)
     if response.status_code != 200:
-        return "Error retrieving Threat Actor", 500
+        return abort(500, description="Error retrieving Threat Actor")
     return render_template("threat_actor.html", threat_actor=response.json())
 
 @app.route('/api/threat-actors', methods=['GET'])
