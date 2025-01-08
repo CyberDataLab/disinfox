@@ -81,6 +81,17 @@
         </div>
     </nav>
 
+    {% if config['READONLY'] %}
+    <nav class="navbar navbar-expand-lg">
+        <div class="container d-flex justify-content-center align-items-center">
+            <div class="alert alert-warning fade show text-center" role="alert">
+                <strong>Warning!</strong> This is a read-only version of the application. You can't perform any changes. Expect errors for those actions.
+            </div>
+        </div>
+    </nav>
+    
+    {% endif %}
+
     <div class="container mt-5">
         {% block content %}{% endblock %}
     </div>
@@ -97,7 +108,7 @@
             <a href="https://cyberdatalab.um.es" target="_blank" class="text-muted">
                 <img src="{{ url_for('static', filename='images/logocdl-negativo.png') }}" alt="CyberDataLab logo" width="100" class="d-inline-block align-text-center">
             </a>
-            2024
+            2024 {{config['READONLY']}}
         </span>
     </div>
 </footer>
