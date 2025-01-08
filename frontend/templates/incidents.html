@@ -39,7 +39,6 @@
                 <!-- Button to trigger modal -->
                 <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-info">View</a>
                 <!-- Favorite button with a star icon filled and unfilled depending on the favorite status -->
-                {% if current_user.is_authenticated %}
                 <button class="btn btn-warning" onclick="toggleFavorite('{{ incident.id }}')"
                     id="favoriteBtn-{{ incident.id }}">
                     {% if incident.favorited %}
@@ -56,7 +55,6 @@
                     </svg>
                     {% endif %}
                 </button>
-                {% endif %}
             </td>
         </tr>
         {% endfor %}

@@ -1,5 +1,35 @@
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 import requests
+from flask import session
+
+class Anonymous(AnonymousUserMixin):
+    def __init__(self):
+        self.email = 'guest@example.org'
+        self.firstName = 'Nice'
+        self.lastName = 'Guest'
+    def get_favourite_incidents(self):
+        return session.get('favoriteIncidents', [])
+    def add_favourite_incident(self, incident_id):
+        favoriteIncidents = self.get_favourite_incidents()
+        if incident_id in favoriteIncidents:
+            return False
+        favoriteIncidents.append(incident_id)
+        session['favoriteIncidents'] = favoriteIncidents
+        return True
+    def remove_favourite_incident(self, incident_id):
+        favoriteIncidents = self.get_favourite_incidents()
+        if incident_id not in favoriteIncidents:
+            return False
+        favoriteIncidents.remove(incident_id)
+        session['favoriteIncidents'] = favoriteIncidents
+        return True
+    def to_json(self):
+        return {
+            'email': self.email,
+            'firstName': self.firstName,
+            'lastName': self.lastName,
+            'favoriteIncidents': self.get_favourite_incidents()
+        }
 
 class User(UserMixin):
     def __init__(self, email, first_name=None, last_name=None):

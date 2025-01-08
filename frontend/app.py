@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, abort
 import requests
 import pycountry
 import os
@@ -8,7 +8,8 @@ from forms import IncidentForm, FileUploadForm, LoginForm, RegisterForm
 from incident_export import export_incident_to_pdf, export_incident_to_word
 
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from models import User
+from models import User, Anonymous
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secretkey"
@@ -16,6 +17,9 @@ bootstrap = Bootstrap5(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
+app.permanent_session_lifetime = timedelta(days=1)  # La sesión dura 1 día
+
 
 
 
@@ -37,6 +41,8 @@ if not alive:
     app.logger.error("FAILED")
     exit(1)
 
+
+login_manager.anonymous_user = Anonymous
 
 
 @login_manager.user_loader
@@ -86,18 +92,22 @@ def login():
     return redirect(url_for("home"), code=302)
 
 @app.route("/profile", methods=["GET"])
-@login_required
+#@login_required
 def profile():
-    user_data = requests.get(BACKEND_ROOT + "users/" + current_user.email)
-    if user_data.status_code != 200:
-        return "Error getting profile", 500
+    if current_user.is_anonymous:
+        user_data = current_user.to_json()
+    elif current_user.is_authenticated:
+        user_data_response = requests.get(BACKEND_ROOT + "users/" + current_user.email)
+        if user_data_response.status_code != 200:
+            return "Error getting profile", 500
+        user_data = user_data.json()
     # Get the data from the favorite incidents id
     favorites = []
-    for incident_id in user_data.json().get("favoriteIncidents", []):
+    for incident_id in user_data.get("favoriteIncidents", []):
         response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
         if response.status_code == 200:
             favorites.append(response.json())
-    return render_template("profile.html", user=user_data.json(), favorites=favorites)
+    return render_template("profile.html", user=user_data, favorites=favorites)
 
 @app.route("/profile/delete", methods=["POST"])
 @login_required
@@ -140,6 +150,10 @@ def incidents():
                     incident["favorited"] = incident["id"] in favorites
         except:
             app.logger.error("Error getting favorites")
+    elif current_user.is_anonymous:
+        for incident in incidents_response.get("incidents", []):
+            incident["favorited"] = incident["id"] in current_user.get_favourite_incidents()
+
     npages = incidents_response.get("total_incidents", 0) // incidents_response.get("limit", LISTING_LIMIT) + 1
     total_incidents = incidents_response.get("total_incidents", 0)
     return render_template("incidents.html", 
@@ -147,14 +161,17 @@ def incidents():
                             npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
 
 @app.route("/incidents/<incident_id>", methods=["GET"])
-@login_required
+#@login_required
 def incident(incident_id):
     response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
     if response.status_code != 200:
         return "Error retrieving incident", 500
     favorited = False
-    if requests.get(BACKEND_ROOT + "users/" + current_user.email + "/favorites/" + incident_id).status_code == 200:
-        favorited = True
+    if current_user.is_anonymous:
+        favorited = incident_id in current_user.get_favourite_incidents()
+    elif current_user.is_authenticated:
+        if requests.get(BACKEND_ROOT + "users/" + current_user.email + "/favorites/" + incident_id).status_code == 200:
+            favorited = True
     incident = response.json()
     return render_template("incident.html", incident=incident, favorited=favorited)
 
@@ -225,34 +242,45 @@ def export_incident(incident_id):
     return document_data, 200, {"Content-Type": content_type, "Content-Disposition": f"attachment; filename=incident_{incident_id}.{extension}"}
 
 @app.route("/incidents/<incident_id>/favorite", methods=["POST"])
-@login_required
+#@login_required
 def toggle_favorite(incident_id):
     # The backend has DELETE and POST methods for favorites
     favorite = False
-    try:
-        response = requests.get(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
-        if response.status_code == 200:
+    if current_user.is_anonymous:
+        if incident_id in current_user.get_favourite_incidents():
+            current_user.remove_favourite_incident(incident_id)
+            favorite = False
+            app.logger.info("fav removed")
+        else:
+            app.logger.info("fav added")
+            current_user.add_favourite_incident(incident_id)
             favorite = True
-        elif response.status_code == 404:
+        app.logger.info("Guest favorites: " + str(current_user.get_favourite_incidents()))
+    elif current_user.is_authenticated:
+        try:
+            response = requests.get(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
+            if response.status_code == 200:
+                favorite = True
+            elif response.status_code == 404:
+                favorite = False
+            else:
+                return "Error getting favorites", 500
+        except:
+            return "Error getting favorites", 500
+        
+        if favorite:
+            response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
             favorite = False
         else:
-            return "Error getting favorites", 500
-    except:
-        return "Error getting favorites", 500
-    
-    if favorite:
-        response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
-        favorite = False
-    else:
-        response = requests.post(BACKEND_ROOT + f"users/{current_user.email}/favorites", json={"incident_id": incident_id})
-        favorite = True
-
-    if response.status_code == 200:
-        return jsonify({"favorite": favorite}), 200
-    return "Error toggling favorite", 500
+            response = requests.post(BACKEND_ROOT + f"users/{current_user.email}/favorites", json={"incident_id": incident_id})
+            favorite = True
+        if response.status_code != 200:
+            return "Error toggling favorite", 500
+        
+    return jsonify({"favorite": favorite}), 200
 
 @app.route("/incidents/<incident_id>/remove_favorite", methods=["POST"])
-@login_required
+#@login_required
 def remove_favorite(incident_id):
     response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
     if response.status_code != 200:
@@ -260,7 +288,7 @@ def remove_favorite(incident_id):
     return redirect(url_for("profile"), code=302)
 
 @app.route("/threat-actors/", methods=["GET", "POST"])
-@login_required
+#@login_required
 def threat_actors():
     if request.method == "GET":
         page = request.args.get("page", 1, type=int)
@@ -275,7 +303,7 @@ def threat_actors():
     return "Not implemented", 400
 
 @app.route("/threat-actors/<ta_id>",  methods=["GET"])
-@login_required
+#@login_required
 def threat_actor(ta_id):
     response = requests.get(BACKEND_ROOT + "threat-actors/" + ta_id)
     if response.status_code != 200:
@@ -298,7 +326,7 @@ def get_threat_actors():
     return jsonify([ta["name"] for ta in threat_actors]), 200
 
 @app.route('/api/incident-details/<incident_id>', methods=['GET'])
-@login_required
+#@login_required
 def api_incident_detailed_bundle(incident_id):
     incident_stix_bundle = {}
     try:
@@ -320,7 +348,7 @@ def api_incident_detailed_bundle(incident_id):
     return jsonify(stix_bundle), 200
 
 @app.route('/api/threat-actor-details/<threat_actor_id>', methods=['GET'])
-@login_required
+#@login_required
 def api_threat_actor_detailed_bundle(threat_actor_id):
     incident_stix_bundle = {}
     try:

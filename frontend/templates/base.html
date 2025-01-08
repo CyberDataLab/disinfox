@@ -44,7 +44,6 @@
                 </ul>
                 <!-- Logged user indication in the right side of the screen -->
                 <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <div class="nav-link d-flex align-items-center">
                                 <a href="{{ url_for('profile') }}">
@@ -55,6 +54,7 @@
                                 </a>
                             </div>
                         </li>
+                        {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <button class="btn btn btn-outline-danger ms-2 d-flex align-items-center"
                                 onclick="location.href='{{ url_for('logout') }}'">
@@ -64,7 +64,8 @@
                                 Logout
                             </button>
                         </li>
-                    {% else %}
+                        {% endif %}
+                        {% if current_user.is_anonymous %}
                         <li class="nav-item d-flex align-items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
                                 <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
@@ -74,7 +75,7 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('register') }}">Register</a>
                         </li>
-                    {% endif %}
+                        {% endif %}
                 </ul>
             </div>
         </div>
