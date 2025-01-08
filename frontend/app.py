@@ -17,10 +17,7 @@ bootstrap = Bootstrap5(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-
-app.permanent_session_lifetime = timedelta(days=1)  # La sesión dura 1 día
-
-
+app.config["READONLY"] = os.environ.get("READONLY", "False") == "True"
 
 
 BACKEND_ROOT = f"http://{os.environ.get('BACKEND_HOST', 'localhost')}:{os.environ.get('BACKEND_PORT', '5000')}/"
@@ -282,9 +279,12 @@ def toggle_favorite(incident_id):
 @app.route("/incidents/<incident_id>/remove_favorite", methods=["POST"])
 #@login_required
 def remove_favorite(incident_id):
-    response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
-    if response.status_code != 200:
-        return "Error deleting favorite", 500
+    if current_user.is_anonymous:
+        current_user.remove_favourite_incident(incident_id)
+    elif current_user.is_authenticated:
+        response = requests.delete(BACKEND_ROOT + f"users/{current_user.email}/favorites/{incident_id}")
+        if response.status_code != 200:
+            return "Error deleting favorite", 500
     return redirect(url_for("profile"), code=302)
 
 @app.route("/threat-actors/", methods=["GET", "POST"])
