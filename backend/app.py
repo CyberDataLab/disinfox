@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify, url_for, abort
 from stix2 import parse, ThreatActor, Location, IntrusionSet, Relationship, Bundle
 from uuid import uuid5, UUID
 from pymongo import MongoClient
@@ -66,6 +66,7 @@ def register():
     user_data["password"] = hashed
     # Add favourite incidents list to the user
     user_data["favoriteIncidents"] = []
+    user_data["api_key"] = generate_api_key(email)
     # Insert the user in the database
     users.insert_one(user_data)
     return jsonify({"message": "User registered successfully"}), 201
@@ -155,9 +156,7 @@ def generate_api_key(user_id):
     user = users.find_one({"email": user_id})
     if not user:
         return jsonify({"message": "User not found"}), 404
-    # Random API key
-    email64 = b64encode(user_id.encode('utf-8')).decode('utf-8')
-    api_key = API_KEY_SEPARATOR.join([API_KEY_IDENTIFIER, email64, secrets.token_urlsafe(API_KEY_RANDOM_LENGTH)])
+    api_key = build_api_key(user_id)
     users.update_one({"email": user_id}, {"$set": {"api_key": api_key}})
     return jsonify({"message": "API key generated successfully", "api_key": api_key}), 201
 
@@ -477,6 +476,12 @@ def build_paginated_json(request, cursor, total_objects, objects_name="objects")
         "total_"+objects_name: total_objects,
         "links": links
     })
+
+def build_api_key(user_id):
+    # Random API key
+    email64 = b64encode(user_id.encode('utf-8')).decode('utf-8')
+    api_key = API_KEY_SEPARATOR.join([API_KEY_IDENTIFIER, email64, secrets.token_urlsafe(API_KEY_RANDOM_LENGTH)])
+    return api_key
 
 if __name__ == '__main__':
     app.run(debug=True)
