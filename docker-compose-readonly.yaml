@@ -39,6 +39,7 @@ services:
       - LAST_UPDATE=${LAST_COMMIT}
       - READONLY=True
       - API_KEY_READONLY=${API_KEY_READONLY}
+      - FLASK_APP=app_readonly.py
 
 
   public-api:
