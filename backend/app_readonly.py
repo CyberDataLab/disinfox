@@ -46,7 +46,7 @@ app.logger.info("¡¡¡¡¡¡¡¡¡¡¡¡ READONLY MODE ENABLED !!!!!!!!!!!!!")
 
 @app.before_request
 def restrict_public_mode():
-    if environ.get("READONLY", "false").lower() == "true" and request.method in ["POST", "PUT", "DELETE"]:
+    if environ.get("READONLY", "false").lower() == "true" and request.method in ["PUT", "DELETE"]:
         return abort(403, description="Action not allowed in public mode")
 
 # Root informative endpoint
@@ -54,21 +54,20 @@ def restrict_public_mode():
 def home():
     return jsonify({"message": "Welcome to the DISINFOX API. Check the documentation to see the available endpoints"}), 200
 
-@app.route('/check-api-key', methods=['GET'])
+@app.route('/check-api-key', methods=['POST'])
 def check_api_key():
-    # Get the API key from the form data
-    # Check if an API key is valid
+    # We are in the readonly version, so we check with the environment variable
+    app.logger.info("Checking API key")
     api_key = request.form.get("api_key")
     if not api_key:
         app.logger.info("No API key provided")
         return jsonify({'message': 'Please provide the api_key parameter'}), 400
-    separated_key = api_key.split(API_KEY_SEPARATOR)
-    user = users.find_one({"email": b64decode(separated_key[1]).decode('utf-8')})
-    app.logger.info(f"API user found: {user}, comparing {separated_key[0]} with {API_KEY_IDENTIFIER} and {user['api_key']} with {separated_key[2]}")
+    app.logger.info(f"Checking API key: {api_key} against {environ.get('API_KEY_READONLY')}")
+    if api_key != environ.get("API_KEY_READONLY"):
+        app.logger.info("Invalid API key")
+        return jsonify({'message': 'Invalid API key'}), 401
 
-    if not API_KEY_IDENTIFIER == separated_key[0] or not user or not user["api_key"] == api_key:
-        return jsonify({"message": "Invalid API key"}), 401
-    return jsonify({"message": "Valid API key"}), 200
+    return jsonify({'message': 'API key is valid'}), 200
 
 
 # Get all the incidents stored in the database with pagination and HATEOAS

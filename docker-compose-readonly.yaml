@@ -24,6 +24,7 @@ services:
       - READONLY=True
       # we set a different app.py file for the readonly version
       - FLASK_APP=app_readonly.py
+      - API_KEY_READONLY=${API_KEY_READONLY}
 
   frontend:
     build: ./frontend
@@ -37,6 +38,7 @@ services:
       - BACKEND_PORT=5000
       - LAST_UPDATE=${LAST_COMMIT}
       - READONLY=True
+      - API_KEY_READONLY=${API_KEY_READONLY}
 
 
   public-api:
@@ -48,7 +50,7 @@ services:
     restart: always # this prevents a startup failure (becouse of backend not being ready)
     environment:
       - BACKEND_HOST=backend
-      - BACKEND_PORT=5000s
+      - BACKEND_PORT=5000
 
 volumes:
   mongo-data:

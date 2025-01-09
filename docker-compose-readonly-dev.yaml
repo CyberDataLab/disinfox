@@ -25,6 +25,7 @@ services:
       # we set a different app.py file for the readonly version
       - FLASK_APP=app_readonly.py
       - FLASK_DEBUG=1
+      - API_KEY_READONLY=${API_KEY_READONLY}
     volumes:
       - ./backend:/app
       
@@ -40,7 +41,10 @@ services:
       - BACKEND_PORT=5000
       - LAST_UPDATE=${LAST_COMMIT}
       - READONLY=True
+      - FLASK_APP=app_readonly.py
       - FLASK_DEBUG=1
+      - API_KEY_READONLY=${API_KEY_READONLY}
+
     volumes:
       - ./frontend:/app
 
@@ -53,7 +57,7 @@ services:
     restart: always # this prevents a startup failure (becouse of backend not being ready)
     environment:
       - BACKEND_HOST=backend
-      - BACKEND_PORT=5000s
+      - BACKEND_PORT=5000
       - FLASK_DEBUG=1
     volumes:
       - ./public-api:/app
