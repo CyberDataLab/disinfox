@@ -38,9 +38,7 @@ if not alive:
     app.logger.error("FAILED")
     exit(1)
 
-
 login_manager.anonymous_user = Anonymous
-
 
 @app.errorhandler(500)
 def internal_server_error(e):
