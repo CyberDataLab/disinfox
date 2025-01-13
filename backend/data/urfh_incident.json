@@ -1,0 +1,512 @@
+{
+  "id": "bundle--228c4880-744b-43f7-8669-5bc58b04a242",
+  "objects": [
+    {
+      "created": "2024-12-25T23:35:11.86288Z",
+      "description": "Claims that Ukraine had sold CAESAR howitzers, supplied by France as military aid, on the black market. These allegations were propagated by Russian-affiliated media and Telegram channels in July 2022, supported by fabricated evidence and unverifiable reports. The narrative aimed to undermine trust in Western military support for Ukraine and to portray the aid as being misused. Despite lacking credible evidence, the disinformation gained traction within pro-Russian circles, showcasing the manipulation of information to influence public perception during the Ukraine war.",
+      "first_seen": "2022-06-20T00:00:00Z",
+      "id": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "labels": [
+        "incident",
+        "disinformation"
+      ],
+      "modified": "2024-12-25T23:35:11.86288Z",
+      "name": "Ukraine re-sold French howitzers for profit",
+      "spec_version": "2.1",
+      "type": "intrusion-set"
+    },
+    {
+      "created": "2023-09-14T20:38:04.999444Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Organise citizens around pro-state messaging. Coordinate paid or volunteer groups to push state propaganda.",
+      "external_references": [
+        {
+          "external_id": "T0002",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0002.md"
+        }
+      ],
+      "id": "attack-pattern--70717452-f7e3-4ce8-956f-39a4d34c5cfb",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "plan-objectives"
+        }
+      ],
+      "modified": "2023-09-14T20:38:04.999444Z",
+      "name": "Facilitate State Propaganda",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.863245Z",
+      "id": "relationship--1dce08d4-3650-4f78-8d55-1a08055ffbf3",
+      "modified": "2024-12-25T23:35:11.863245Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--70717452-f7e3-4ce8-956f-39a4d34c5cfb",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.003026Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Stories planted or promoted in computational propaganda operations often make use of experts fabricated from whole cloth, sometimes specifically for the story itself.",
+      "external_references": [
+        {
+          "external_id": "T0009",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0009.md"
+        }
+      ],
+      "id": "attack-pattern--7981d39a-01be-46f6-b9f9-507d0c03e919",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "establish-legitimacy"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.003026Z",
+      "name": "Create Fake Experts",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.863484Z",
+      "id": "relationship--520510d2-52e1-4788-8787-bb9da7d81e23",
+      "modified": "2024-12-25T23:35:11.863484Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--7981d39a-01be-46f6-b9f9-507d0c03e919",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.039585Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Campaigns often leverage tactical and informational asymmetries on the threat surface, as seen in the Distort and Deny strategies, and the \"firehose of misinformation\". Specifically, conspiracy theorists can be repeatedly wrong, but advocates of the truth need to be perfect. By constantly escalating demands for proof, propagandists can effectively leverage this asymmetry while also priming its future use, often with an even greater asymmetric advantage. The conspiracist is offered freer rein for a broader range of \"questions\" while the truth teller is burdened with higher and higher standards of proof.",
+      "external_references": [
+        {
+          "external_id": "T0040",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0040.md"
+        }
+      ],
+      "id": "attack-pattern--328ce801-be1a-4596-9961-008e1d9b85f7",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "develop-narratives"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.039585Z",
+      "name": "Demand Insurmountable Proof",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.863683Z",
+      "id": "relationship--67a2724e-8cd5-41b3-a3e4-31673d70be98",
+      "modified": "2024-12-25T23:35:11.863683Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--328ce801-be1a-4596-9961-008e1d9b85f7",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.040267Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Direct messaging via chat app is an increasing method of delivery. These messages are often automated and new delivery and storage methods make them anonymous, viral, and ephemeral. This is a difficult space to monitor, but also a difficult space to build acclaim or notoriety.",
+      "external_references": [
+        {
+          "external_id": "T0043",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0043.md"
+        }
+      ],
+      "id": "attack-pattern--23fc4de3-6f2c-4080-b8ed-13e996b1a4b9",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "select-channels-and-affordances"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.040267Z",
+      "name": "Chat Apps",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.863876Z",
+      "id": "relationship--27dfd4b3-ce42-4e75-abd6-b006f39c4b49",
+      "modified": "2024-12-25T23:35:11.863876Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--23fc4de3-6f2c-4080-b8ed-13e996b1a4b9",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.251542Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Social media are interactive digital channels that facilitate the creation and sharing of information, ideas, interests, and other forms of expression through virtual communities and networks.",
+      "external_references": [
+        {
+          "external_id": "T0104",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0104.md"
+        }
+      ],
+      "id": "attack-pattern--78a2af04-ac4a-430b-b233-6223715a76f5",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "select-channels-and-affordances"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.251542Z",
+      "name": "Social Networks",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.864066Z",
+      "id": "relationship--2376cbd3-4778-4509-a126-513ca47ee3ad",
+      "modified": "2024-12-25T23:35:11.864066Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--78a2af04-ac4a-430b-b233-6223715a76f5",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.262221Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Examples include TV, Newspaper, Radio, etc.",
+      "external_references": [
+        {
+          "external_id": "T0111",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0111.md"
+        }
+      ],
+      "id": "attack-pattern--314ecce1-6d89-4304-a149-1c3d8fddaf9e",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "select-channels-and-affordances"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.262221Z",
+      "name": "Traditional Media",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.864254Z",
+      "id": "relationship--61b8c852-bad2-4f3c-97b2-ce66712f616c",
+      "modified": "2024-12-25T23:35:11.864254Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--314ecce1-6d89-4304-a149-1c3d8fddaf9e",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.043175Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Use the fake experts that were set up during Establish Legitimacy. Pseudo-experts are disposable assets that often appear once and then disappear. Give \"credility\" to misinformation. Take advantage of credential bias",
+      "external_references": [
+        {
+          "external_id": "T0045",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0045.md"
+        }
+      ],
+      "id": "attack-pattern--0d8138a8-8690-491d-97b5-a330af054b39",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "conduct-pump-priming"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.043175Z",
+      "name": "Use Fake Experts",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.864478Z",
+      "id": "relationship--8179e938-58c6-414f-b857-faab7b5ad38a",
+      "modified": "2024-12-25T23:35:11.864478Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--0d8138a8-8690-491d-97b5-a330af054b39",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.27456Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Direct posting refers to a method of posting content via a one-way messaging service, where the recipient cannot directly respond to the poster’s messaging. An influence operation may post directly to promote operation narratives to the target audience without allowing opportunities for fact-checking or disagreement, creating a false sense of support for the narrative.",
+      "external_references": [
+        {
+          "external_id": "T0115.003",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0115.003.md"
+        }
+      ],
+      "id": "attack-pattern--5daa2f8a-2460-4cdd-ae55-b70f439a9f51",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "deliver-content"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.27456Z",
+      "name": "One-Way Direct Posting",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": true,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.864696Z",
+      "id": "relationship--2502f607-f4cf-4af7-9e58-c0e6c9014c45",
+      "modified": "2024-12-25T23:35:11.864696Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--5daa2f8a-2460-4cdd-ae55-b70f439a9f51",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.278896Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Cross-posting refers to posting the same message to multiple internet discussions, social media platforms or accounts, or news groups at one time. An influence operation may post content online in multiple communities and platforms to increase the chances of content exposure to the target audience.",
+      "external_references": [
+        {
+          "external_id": "T0119",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0119.md"
+        }
+      ],
+      "id": "attack-pattern--872f0dc3-202e-4e9a-a4fc-0457252aecae",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "maximise-exposure"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.278896Z",
+      "name": "Cross-Posting",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.864887Z",
+      "id": "relationship--12d7099b-7d6e-4883-947e-d93493abd45e",
+      "modified": "2024-12-25T23:35:11.864887Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--872f0dc3-202e-4e9a-a4fc-0457252aecae",
+      "type": "relationship"
+    },
+    {
+      "created": "2023-09-14T20:38:05.275726Z",
+      "created_by_ref": "identity--f1a0f560-2d9e-4c5d-bf47-7e96e805de82",
+      "description": "Deliver content by attracting the attention of traditional media (earned media).",
+      "external_references": [
+        {
+          "external_id": "T0117",
+          "source_name": "mitre-attack",
+          "url": "https://github.com/DISARMFoundation/DISARMframeworks/blob/main/generated_pages/techniques/T0117.md"
+        }
+      ],
+      "id": "attack-pattern--72df7e55-dc60-4a7e-9928-ed41ac0e1581",
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "deliver-content"
+        }
+      ],
+      "modified": "2023-09-14T20:38:05.275726Z",
+      "name": "Attract Traditional Media",
+      "object_marking_refs": [
+        "marking-definition--f79f25d2-8b96-4580-b169-eb7b613a7c31"
+      ],
+      "spec_version": "2.1",
+      "type": "attack-pattern",
+      "x_mitre_is_subtechnique": false,
+      "x_mitre_platforms": [
+        "Windows",
+        "Linux",
+        "Mac"
+      ],
+      "x_mitre_version": "2.1"
+    },
+    {
+      "created": "2024-12-25T23:35:11.865189Z",
+      "id": "relationship--d7b85b3e-3eab-4413-8771-528c782dc2b2",
+      "modified": "2024-12-25T23:35:11.865189Z",
+      "relationship_type": "uses",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "attack-pattern--72df7e55-dc60-4a7e-9928-ed41ac0e1581",
+      "type": "relationship"
+    },
+    {
+      "created": "2024-12-25T23:27:53.696031Z",
+      "id": "threat-actor--7ebead2d-9a79-505f-8998-026100724eab",
+      "labels": [
+        "threat-actor"
+      ],
+      "modified": "2024-12-25T23:27:53.696031Z",
+      "name": "Russia",
+      "spec_version": "2.1",
+      "threat_actor_types": [
+        "nation-state"
+      ],
+      "type": "threat-actor"
+    },
+    {
+      "created": "2024-12-25T23:35:11.86539Z",
+      "id": "relationship--dd7da138-6850-4b6b-ae0f-8f20c2502882",
+      "modified": "2024-12-25T23:35:11.86539Z",
+      "relationship_type": "attributed-to",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "threat-actor--7ebead2d-9a79-505f-8998-026100724eab",
+      "type": "relationship"
+    },
+    {
+      "country": "Ukraine",
+      "created": "2024-12-25T23:27:52.445382Z",
+      "id": "location--c1257cd0-4b5c-53e7-a3b5-4f7b6aeb6209",
+      "modified": "2024-12-25T23:27:52.445382Z",
+      "name": "Ukraine",
+      "spec_version": "2.1",
+      "type": "location"
+    },
+    {
+      "created": "2024-12-25T23:35:11.865581Z",
+      "id": "relationship--c476d1ee-1c33-4989-a51c-3dd4ef64dcf5",
+      "modified": "2024-12-25T23:35:11.865581Z",
+      "relationship_type": "targets",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "location--c1257cd0-4b5c-53e7-a3b5-4f7b6aeb6209",
+      "type": "relationship"
+    },
+    {
+      "country": "France",
+      "created": "2024-12-25T23:27:52.703244Z",
+      "id": "location--be5032fd-0b5c-5170-beb7-c7b499afa4bd",
+      "modified": "2024-12-25T23:27:52.703244Z",
+      "name": "France",
+      "spec_version": "2.1",
+      "type": "location"
+    },
+    {
+      "created": "2024-12-25T23:35:11.865771Z",
+      "id": "relationship--1f2b7fae-7f38-4f19-a4a1-e9065cc18463",
+      "modified": "2024-12-25T23:35:11.865771Z",
+      "relationship_type": "targets",
+      "source_ref": "intrusion-set--76271730-6e05-51f0-bf4c-6a7c7b53d9b0",
+      "spec_version": "2.1",
+      "target_ref": "location--be5032fd-0b5c-5170-beb7-c7b499afa4bd",
+      "type": "relationship"
+    }
+  ],
+  "type": "bundle"
+}
