@@ -30,6 +30,7 @@ db = client[environ.get("MONGODB_DB")]
 stix2_objects = db['stix2_objects']
 stix2_objects.create_index("id", unique=True)
 users = db['users']
+users.create_index("email", unique=True)
 
 NAMESPACE_UUID = UUID('12345678-1234-5678-1234-567812345678')
 # Load the DISARM STIX2 objects from boundle
@@ -66,7 +67,7 @@ def register():
     user_data["password"] = hashed
     # Add favourite incidents list to the user
     user_data["favoriteIncidents"] = []
-    user_data["api_key"] = generate_api_key(email)
+    user_data["api_key"] = build_api_key(email)
     # Insert the user in the database
     users.insert_one(user_data)
     return jsonify({"message": "User registered successfully"}), 201
