@@ -80,18 +80,28 @@ def login():
     login_form = LoginForm()
     if request.method == "GET":
         return render_template("login.html", form=login_form)
+    
     form = login_form.data
     if not login_form.validate_on_submit():
         return "Invalid form: " + str(login_form.errors), 400
+    
     response = requests.post(BACKEND_ROOT + "login", json=form)
     if response.status_code == 401:
         return "Invalid credentials", 401
     if response.status_code != 200:
         abort(500)
-    user = response.json()
-    user = User(form["email"])
+    
+    user_data = User.get(response.json()["email"], BACKEND_ROOT + "users/")
+    
+    user = User(
+        email=user_data["email"],
+        first_name=user_data.get("firstName"),
+        last_name=user_data.get("lastName")
+    )
+    
     login_user(user)
     return redirect(url_for("home"), code=302)
+
 
 @app.route("/profile", methods=["GET"])
 #@login_required
