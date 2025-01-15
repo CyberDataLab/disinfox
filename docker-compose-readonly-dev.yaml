@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.4
     volumes:
       - mongo-data:${MONGODB_DATA_PATH}
     environment:
@@ -12,6 +12,8 @@ services:
     build: ./backend
     depends_on:
       - mongodb
+    ports:
+      - "8888:5000"
     restart: always # this prevents a startup failure (becouse of mongodb not being ready)
     environment:
       - MONGODB_HOST=mongodb

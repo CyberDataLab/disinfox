@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.4
     ports:
       - "27017:27017"
     volumes:
@@ -28,7 +28,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "${BACKEND_EXTERNAL_PORT}:5000"
+      - "8888:5000"
     depends_on:
       - mongodb
     restart: always # this prevents a startup failure (becouse of mongodb not being ready)

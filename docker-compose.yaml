@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.4
     volumes:
       - mongo-data:${MONGODB_DATA_PATH}
     environment:
