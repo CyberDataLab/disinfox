@@ -43,15 +43,6 @@ class User(UserMixin):
     def get_id(self):
         return self.email
     
-    def is_authenticated(self):
-        return True
-    
-    def is_active(self):
-        return True
-    
-    def is_anonymous(self):
-        return False
-    
     @staticmethod
     def get(user_id, api_user_root):
         response = requests.get(f"{api_user_root}{user_id}")

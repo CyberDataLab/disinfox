@@ -91,13 +91,7 @@ def login():
     if response.status_code != 200:
         abort(500)
     
-    user_data = User.get(response.json()["email"], BACKEND_ROOT + "users/")
-    
-    user = User(
-        email=user_data["email"],
-        first_name=user_data.get("firstName"),
-        last_name=user_data.get("lastName")
-    )
+    user = User.get(form["email"], BACKEND_ROOT + "users/")
     
     login_user(user)
     return redirect(url_for("home"), code=302)
@@ -106,13 +100,14 @@ def login():
 @app.route("/profile", methods=["GET"])
 #@login_required
 def profile():
+    user_data = {}
     if current_user.is_anonymous:
         user_data = current_user.to_json()
     elif current_user.is_authenticated:
         user_data_response = requests.get(BACKEND_ROOT + "users/" + current_user.email)
         if user_data_response.status_code != 200:
             return abort(500, description="Error getting profile")
-        user_data = user_data.json()
+        user_data = user_data_response.json()
     # Get the data from the favorite incidents id
     favorites = []
     for incident_id in user_data.get("favoriteIncidents", []):
