@@ -1,8 +1,9 @@
 # 🦊 DISINFOX (DISINFOrmation threat eXchange)
 
-DISINFOX is an open-source threat intelligence exchange platform focused in the sharing of disinformation incidents.
+DISINFOX is an **open-source threat intelligence exchange platform** designed to enable the real-time, interoperable exchange of disinformation incidents with client-side CTI consumers. By using CTI standards and methodologies, DISINFOX provides a **centralized platform for storing, managing, and analyzing disinformation incidents, integrating seamlessly with existing CTI tools** to enhance the detection, investigation, and mitigation of this evolving threat. To achieve this, the following sub-objectives have been defined.
 
-
+![Disinformation incident detail](imgs/incident-detail.png)
+![Disinformation incident detail](imgs/incident-detail-2.png)
 
 ## 🧱 Installation and deployment
 
@@ -46,7 +47,3 @@ the docker-compose files with `-dev` variants are recommended if you intend to m
 ## 🕹️ Use
 
 After performing the installation, the DISINFOX's web page is available at <http://localhost/> by default or at the port established in the `FRONTEND_EXTERNAL_PORT` at the `.env` file.
-
-
-
-
