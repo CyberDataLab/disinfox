@@ -239,27 +239,30 @@ def save_bulk_incidents():
     # Here JSON with a list of incidents or a CSV file with the incidents can be uploaded (it comes from a form)
     ftype = request.files['file'].content_type
     app.logger.info(f"Received file with content type: {ftype}")
+    stixed_objects = []
     # If CSV (content-type: text/csv) we parse the CSV and build the STIX2 objects
     if ftype in ['text/csv','application/vnd.ms-excel']:
         csv_string = request.files['file'].read().decode('utf-8')
         incidents = parse_csv_string(csv_string)
+        for incident in incidents:
+            objects, intrusionid = build_stix_objects(incident, disarm_stix2)
+            stixed_objects.extend(objects)
     elif ftype == 'application/json':
-        incidents = request.json
+        stixed_objects = json.loads(request.files['file'].read().decode('utf-8'))['objects']
     else:
-        return jsonify({"message": "Invalid content type. Only CSV or JSON are accepted"}), 400
+        return jsonify({"message": "Invalid content type. Only CSV or STIX2 (JSON) are accepted"}), 400
     
-    app.logger.info(f"Received {len(incidents)} incidents")
+    app.logger.error(f"Received {len(stixed_objects)} objects")
+    app.logger.error(f"{stixed_objects}, type: {type(stixed_objects)}")
     repeated = []
-    for incident in incidents:
-        stix_objects, intrusionid = build_stix_objects(incident, disarm_stix2)
-        for stix_object in stix_objects:
-            isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
-            if isRepeated:
-                app.logger.info(f"Skipping object {stix_object['id']} because it already exists")
-                repeated.append(stix_object['id'])
-                continue
-            serialized = stix_object.serialize()
-            stix2_objects.insert_one(json.loads(serialized))
+    for stix_object in stixed_objects:
+        app.logger.error(f"Checking object {stix_object}. Type: {type(stix_object)}")
+        isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
+        if isRepeated:
+            app.logger.info(f"Skipping object {stix_object['id']} because it already exists")
+            repeated.append(stix_object['id'])
+            continue
+        stix2_objects.insert_one(dict(stix_object))
 
     return jsonify({"message": "Incidents saved successfully", "repeated": repeated}), 201
 

@@ -2,7 +2,7 @@ import os
 import requests
 
 BACKEND_ROOT = "http://localhost:5000/"
-INCIDENTS_DATASET_PATH = 'data/merged_Foulde_DSRM_additions.csv'
+INCIDENTS_DATASET_PATHS = ['data/merged_Foulde_DSRM_additions.csv']
 BACKEND_START_MAX_RETRIES = 5
 BACKEND_START_RETRY_INTERVAL = 5
 
@@ -63,12 +63,14 @@ if __name__ == '__main__':
         print("[SETUP] Failed to check if incidents are already loaded:", e)
         exit(1)
     try:
-        with open(INCIDENTS_DATASET_PATH, 'r') as f:
-            incidents = f.read()
-            response = requests.post(BACKEND_ROOT + 'bulk-incident', 
-                                    files={'file': ('incidents.csv', incidents, 'text/csv')})
-            
-            response.raise_for_status()
+        for dataset_path in INCIDENTS_DATASET_PATHS:
+            with open(dataset_path, 'r') as f:
+                incidents = f.read()
+                extension = dataset_path.split('.')[-1]
+                content_type = 'application/json' if extension == 'json' else 'text/csv'
+                response = requests.post(BACKEND_ROOT + 'bulk-incident', 
+                                        files={'file': ('incidents.' + extension, incidents, content_type)})
+                response.raise_for_status()
     except Exception as e:
         print("[SETUP] Failed to load incidents dataset:", e)
         exit(1)
