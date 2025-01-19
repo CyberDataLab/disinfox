@@ -245,6 +245,10 @@ def export_incident(incident_id):
             return abort(500, description="Error exporting incident")
         content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         extension = "docx"
+    elif doc_type == "stix2":
+        document_data = json.dumps(incident, indent=4)
+        content_type = "application/json"
+        extension = "json"
     else:
         return "Invalid document type", 400
 

@@ -325,6 +325,10 @@
                         <input id="doc_type" type="hidden" name="type" value="docx">
                         <button type="submit" class="btn btn-success">📝 MS Word</button>
                     </form>
+                    <form action="{{ url_for('export_incident', incident_id=incident.id) }}" method="get" class="me-2">
+                        <input id="doc_type" type="hidden" name="type" value="stix2">
+                        <button type="submit" class="btn btn-success">🕸️ STIX2 Bundle</button>
+                    </form>
             </div>
         </div>
     </div>
