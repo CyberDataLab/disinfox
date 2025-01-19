@@ -388,7 +388,7 @@ def build_stix_objects(incident_data, disarm_stix2):
 
     # Get the techniques (DISARM) associated with this incident
     technique_objects = []
-    for technique in incident_data['techniques']:
+    for technique in incident_data.get('techniques', []):
         technique_disarm_id = technique
         # Search in the DISARM dictionary, the STIX ID of the technique to create the relationship
         technique_id = None

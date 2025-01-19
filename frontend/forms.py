@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_wtf import FlaskForm
 from flask_bootstrap import Bootstrap
-from wtforms import StringField, TextAreaField, DateField, SelectMultipleField, SubmitField, FileField, PasswordField, EmailField
+from wtforms import StringField, TextAreaField, DateField, SelectMultipleField, SubmitField, FileField, PasswordField, EmailField, SelectField
 from wtforms.validators import DataRequired
 from flask_wtf.file import FileAllowed, FileRequired
 import pycountry
@@ -39,14 +39,21 @@ if not techniques:
 
 displayed_techniques = [f"{technique['disarm_id']}: {technique['name']}" for technique in techniques]
 
+class NonValidatingSelectField(SelectField):
+    """
+    Attempt to make an open ended select multiple field that can accept dynamic
+    choices added by the browser.
+    """
+    def pre_validate(self, form):
+        pass
 
 class IncidentForm(FlaskForm):
-    event = StringField('Incident name', validators=[DataRequired()], id="event", name="event")
-    description = TextAreaField('Description', validators=[DataRequired()], id="event_description", name="event_description")
-    date = DateField('Date', validators=[DataRequired()])
-    target_countries = SelectMultipleField('Target countries', choices=available_countries)
+    event = StringField('Incident name *', validators=[DataRequired()], id="event", name="event")
+    description = TextAreaField('Description *', validators=[DataRequired()], id="event_description", name="event_description")
+    date = DateField('Date *', validators=[DataRequired()])
+    target_countries = SelectMultipleField('Target countries *', choices=available_countries, validators=[DataRequired()], coerce=str, id="target_countries", render_kw={"multiple": "multiple"}, description="Select at least one country")
     # the threat actor field choices is given dynamically
-    threat_actors = SelectMultipleField('Threat actors', choices=[], validators=[DataRequired()], coerce=str, id="threat_actors", render_kw={"multiple": "multiple"}, description="Select multiple threat actors")
+    threat_actors = NonValidatingSelectField('Threat actors *', validators=[DataRequired()], coerce=str, id="threat_actors", render_kw={"multiple": "multiple"}, description="Select multiple threat actors, if unknown, select 'Unknown'")
     techniques = SelectMultipleField('Techniques', choices=displayed_techniques)
     sources = SelectMultipleField('Sources', choices=[
         ('source1', 'Source 1'),

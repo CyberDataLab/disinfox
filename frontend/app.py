@@ -198,11 +198,13 @@ def new_incident():
         response = requests.post(BACKEND_ROOT + "bulk-incident", files={"file": (file.filename, file, file.content_type)})
         if response.status_code != 201:
             return abort(500, description="Error uploading file")
-        return "File uploaded successfully", 200
+        return redirect(url_for("incidents"), code=302)
 
     # get jsoned form data
     form = incident_form.data
-    app.logger.info("New manual incident: "+ str(form))   
+    app.logger.info("New manual incident: "+ str(form))  
+    if not incident_form.validate_on_submit():
+        return "Invalid form: " + str(incident_form.errors), 400 
 
     backend_request = request.form.to_dict(flat=False)
     backend_request["event"] = backend_request["event"][0]
@@ -213,7 +215,7 @@ def new_incident():
         # redirect to the incidents page and alert the user
         return  redirect(url_for("incidents"), code=302)
     elif response.status_code == 409:
-        return "Incident already exists", 409
+        return abort(409, description="Incident already exists")
     else:
         return abort(500, description="Error creating incident")
     
