@@ -1,6 +1,6 @@
 # 🦊 DISINFOX (DISINFOrmation threat eXchange)
 
-DISINFOX is an **open-source threat intelligence exchange platform** designed to enable the real-time, interoperable exchange of disinformation incidents with client-side CTI consumers. By using CTI standards and methodologies, DISINFOX provides a **centralized platform for storing, managing, and analyzing disinformation incidents, integrating seamlessly with existing CTI tools** to enhance the detection, investigation, and mitigation of this evolving threat. To achieve this, the following sub-objectives have been defined.
+DISINFOX is an **open-source threat intelligence exchange platform** designed to enable the real-time, interoperable exchange of disinformation incidents with client-side CTI consumers. By using CTI standards and methodologies, DISINFOX provides a **centralized platform for storing, managing, and analyzing disinformation incidents, integrating seamlessly with existing CTI tools** to enhance the detection, investigation, and mitigation of this evolving threat.
 
 ![DISINFOX homepage](imgs/homepage.png)
 ![DISINFOX disinformation incident listing](imgs/listing.png)
