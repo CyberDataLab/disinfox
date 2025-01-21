@@ -2,22 +2,78 @@
 
 {% block content %}
 <!-- All blocks down each other -->
-<div class="text-center mt-5">
-    <div>
-    </div>
-    <div class="container">
-        <!-- Huge word size for a emoji-->
-        <h1 class="display-1">🦊</h1>
-        <h2>Welcome to the DISINFOX Threat Intelligence Exchange</h2>
+<div class="d-flex justify-content-around align-items-center">
+    <div class="me-3 text-center">
+        <h1>
+            🦊 Welcome to the DISINFOX Threat Intelligence platform
+        </h1>
         <p class="lead">This platform allows you to report and share cyber disinformation incidents.</p>
     </div>
-
-    <div class="container mt-5">
+    <div class="text-center">
         <p class="lead">What would you like to do?</p>
-        <a href="{{ url_for('new_incident') }}" class="btn btn-success m-2">📋 Report a new incident</a>
-        <a href="{{ url_for('incidents') }}" class="btn btn-primary m-2">🚨 See the listing</a>
-        <a href="{{ url_for('developers') }}" class="btn btn-secondary m-2">💻 I'm a CTI developer!</a>
+        <div class="d-block">
+            <a href="{{ url_for('new_incident') }}" class="btn btn-success m-2 d-block">📋 Report a new incident</a>
+            <a href="{{ url_for('incidents') }}" class="btn btn-primary m-2 d-block">🚨 See the listing</a>
+            <a href="{{ url_for('developers') }}" class="btn btn-secondary m-2 d-block">💻 I'm a CTI developer!</a>
+        </div>
     </div>
+</div>
+
+<!-- Large widest container for the dashboard -->
+<div class="mt-5">
+<h2>📊 Threat landscape</h2>
+<div class="mt-3 d-flex align-items-center">
+    <h4 class="me-1 text-nowrap fw-bold">
+        🚨 Latest incidents:
+    </h4>
+    <div id="marquee" class="marquee" style="width: 100%; overflow: hidden; display: flex;">
+        <!-- Here we will add the latest incidents -->
+        <h2 id="marqueebody" class="d-flex" 
+        style=" font-size: 1em; white-space: nowrap; text-transform: uppercase; width: max-content; margin: 0; padding: 0;"></h2>
+    </div>
+</div>
+<div class="row mt-2">
+    
+    <div class="col-sm-4">
+        <h4 class="fw-bold">👺 Top Threat Actors</h4>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Incidents</th>
+                </tr>
+            </thead>
+            <tbody id="top_threat_actors">
+                <!-- Here we will add the top threat actors -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-lg">
+        <h4 class="fw-bold ">📍 Top target countries</h4>
+        <div class="d-flex">
+            <div class="me-3 flex-grow-2">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">Country</th>
+                            <th scope="col">Incidents</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top_target_countries">
+                        <!-- Here we will add the top target countries -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex-grow-1">
+                <div id="map" style="height: 40vh; width: 100%;"></div>
+            </div>
+    </div>
+
+
+</div>
+
+</div>
 
     {% if last_update %}
     <div class="container mt-5 small">
@@ -25,4 +81,158 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+
+function Marquee(selector, speed) {
+  const parentSelector = document.querySelector(selector);
+  const clone = parentSelector.innerHTML;
+  const firstElement = parentSelector.children[0];
+  let i = 0;
+  console.log(firstElement);
+  parentSelector.insertAdjacentHTML('beforeend', clone);
+  parentSelector.insertAdjacentHTML('beforeend', clone);
+
+  setInterval(function () {
+    firstElement.style.marginLeft = `-${i}px`;
+    if (i > firstElement.clientWidth) {
+      i = 0;
+    }
+    i = i + speed;
+  }, 0);
+}
+
+//after window is completed load
+//1 class selector for marquee
+//2 marquee speed 0.2
+
+    // Fetch top threat actors
+    fetch("{{ url_for('api_top_threat_actors') }}")
+        .then(response => response.json())
+        .then(data => {
+            const topThreatActors = document.getElementById('top_threat_actors');
+            data.forEach(actor => {
+                const row = document.createElement('tr')
+                row
+                row.innerHTML = `
+                    <td>${actor.name}</td>
+                    <td>${actor.count}</td>
+                `;
+                topThreatActors.appendChild(row);
+            });
+        })
+    // Fetch latest incidents
+    fetch("{{ url_for('api_latest_incidents') }}")
+        .then(response => response.json())
+        .then(data => {
+            const latestIncidents = document.getElementById('marqueebody');
+            data.forEach(incident => {
+                const a = document.createElement('a');
+                a.className = "me-3 text-decoration-none";
+                a.href = "{{ url_for('incident', incident_id='')}}"+incident.id;
+                a.innerText = `🍣 ${incident.name} - ${incident.modified}`;
+                latestIncidents.appendChild(a);
+            });
+            Marquee('.marquee', 2);
+
+        })
+
+    // Fetch top target countries
+let countries_count = [];
+fetch("{{ url_for('api_top_locations') }}")
+    .then(response => response.json())
+    .then(data => {
+        const topTargetCountries = document.getElementById('top_target_countries');
+        data.forEach(country => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${country.name}</td>
+                <td>${country.count}</td>
+            `;
+            topTargetCountries.appendChild(row);
+            countries_count.push({ name: country.name, count: country.count });
+        });
+
+        // Una vez que los datos están listos, inicializa el mapa
+        initializeMap();
+    });
+
+
+    function initializeMap() {
+    console.log("Initializing map with countries_count:", countries_count);
+
+    const maxIncidents = Math.max(...countries_count.map(d => d.count));
+
+    // Escala de colores
+    function getColor(d) {
+        if (d === 0) return '#FFFFFF'; // Blanco para países sin datos
+        const intensity = d / maxIncidents;
+        return `rgba(255, 0, 0, ${intensity})`; // Rojo con transparencia según la intensidad
+    }
+
+    // Estilo de los países
+    function style(feature) {
+        const countryName = feature.properties.name; // Usar el campo "name" del GeoJSON
+        const incidents = countries_count.find(
+            (data) => data.name === countryName
+        )?.count || 0; // Buscar el país en la lista o usar 0
+        return {
+            fillColor: getColor(incidents),
+            weight: 1,
+            opacity: 1,
+            color: '#888888', // Borde gris claro
+            dashArray: '3',
+            fillOpacity: 0.7
+        };
+    }
+
+    // Crear mapa
+    const map = L.map('map').setView([40,0], 2);
+
+
+    // If we are in Bootstrap 5 black theme (data-bs-theme="dark"), we need to change the map colors
+    const isDarkTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    if (isDarkTheme) {
+        console.log("Dark theme detected, changing map colors");
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    } else {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    }
+
+    // Cargar capa GeoJSON
+    const geoJsonUrl = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json';
+
+    fetch(geoJsonUrl)
+        .then(response => response.json())
+        .then(geojsonData => {
+            console.log("GeoJSON data loaded:", geojsonData);
+            L.geoJson(geojsonData, {
+                style: style,
+                onEachFeature: function (feature, layer) {
+                    const countryName = feature.properties.name;
+                    const incidents = countries_count.find(
+                        (data) => data.name === countryName
+                    )?.count || 0;
+                    layer.bindPopup(`<b>${countryName}</b><br>Incidentes: ${incidents}`);
+                }
+            }).addTo(map);
+        });
+}
+</script>
+
+<script>
+
+  </script>
+
 {% endblock %}

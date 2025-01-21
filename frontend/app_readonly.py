@@ -281,6 +281,42 @@ def api_threat_actor_detailed_bundle(threat_actor_id):
         pass
     return jsonify(stix_bundle), 200
 
+@app.route("/api/top-threat-actors", methods=["GET"])
+def api_top_threat_actors():
+    try:
+        app.logger.info("Getting top threat actors")
+        response = requests.get(BACKEND_ROOT + "threat-actors/top", params={"limit": 10})
+        if response.status_code == 200:
+            app.logger.info(response.json())
+            return jsonify(response.json()), 200
+    except:
+        pass
+    return jsonify([]), 500
+
+@app.route("/api/top-locations", methods=["GET"])
+def api_top_locations():
+    try:
+        app.logger.info("Getting top locations")
+        response = requests.get(BACKEND_ROOT + "locations/top", params={"limit": 10})
+        if response.status_code == 200:
+            app.logger.info(response.json())
+            return jsonify(response.json()), 200
+    except:
+        pass
+    return jsonify([]), 500
+
+@app.route("/api/latest-incidents", methods=["GET"])
+def api_latest_incidents():
+    try:
+        app.logger.info("Getting last incidents")
+        response = requests.get(BACKEND_ROOT + "incidents", params={"limit": 5})
+        if response.status_code == 200:
+            app.logger.info(response.json().get("incidents", []))
+            return jsonify(response.json().get("incidents", [])), 200
+    except:
+        pass
+    return jsonify([]), 500
+
 @app.route("/about")
 def about():
     return render_template("about.html")

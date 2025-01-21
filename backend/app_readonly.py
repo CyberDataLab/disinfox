@@ -213,6 +213,37 @@ def stix2_objects_endpoint():
         objects_cursor = stix2_objects.find({})
     return build_paginated_json(request, objects_cursor, total_objects), 200
 
+@app.route('/threat-actors/top', methods=['GET'])
+def top_threat_actors():
+    limit = request.args.get('limit', default=10, type=int)
+    # Get the top threat actors by the number of incidents. This is, the amount of attributed-to relationships that have their ID as target_ref.
+    # This results in a list with their ID, name and the count of incidents attributed
+    top_threat_actors = stix2_objects.aggregate([
+        {"$match": {"type": "relationship", "relationship_type": "attributed-to"}},
+        {"$group": {"_id": "$target_ref", "count": {"$sum": 1}}},
+        {"$lookup": {"from": "stix2_objects", "localField": "_id", "foreignField": "id", "as": "threat_actor"}},
+        {"$unwind": "$threat_actor"},
+        {"$project": {"_id": 0, "id": "$_id", "name": "$threat_actor.name", "count": 1}},
+        {"$sort": {"count": -1}},
+        {"$limit": limit}
+    ])
+    return jsonify(list(top_threat_actors)), 200
+
+@app.route('/locations/top', methods=['GET'])
+def top_locations():
+    limit = request.args.get('limit', default=10, type=int)
+    # Get the top locations by the number of incidents. This is, the amount of targets relationships that have their ID as target_ref.
+    # This results in a list with their ID, name and the count of incidents attributed
+    top_locations = stix2_objects.aggregate([
+        {"$match": {"type": "relationship", "relationship_type": "targets"}},
+        {"$group": {"_id": "$target_ref", "count": {"$sum": 1}}},
+        {"$lookup": {"from": "stix2_objects", "localField": "_id", "foreignField": "id", "as": "location"}},
+        {"$unwind": "$location"},
+        {"$project": {"_id": 0, "id": "$_id", "name": "$location.name", "count": 1}},
+        {"$sort": {"count": -1}},
+        {"$limit": limit}
+    ])
+    return jsonify(list(top_locations)), 200
 
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data

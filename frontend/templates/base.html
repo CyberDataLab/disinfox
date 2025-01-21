@@ -84,9 +84,10 @@
     </nav>
 
     {% if config['READONLY'] %}
-    <nav class="navbar navbar-expand-lg">
-        <div class="container d-flex justify-content-center align-items-center">
-            <div class="alert alert-warning fade show text-center" role="alert">
+    <nav class="navbar navbar-expand-lg my-0 py-0">
+        <div class="container d-flex justify-content-center align-items-center my-0 py-0">
+            <div class="alert alert-warning fade show text-center my-0 py-2"
+            role="alert">
                 <strong>Warning!</strong> This is a read-only version of the application. You can't perform any changes. Expect errors for those actions.
             </div>
         </div>
@@ -94,7 +95,7 @@
     
     {% endif %}
 
-    <div class="container mt-5">
+    <div class="container mt-5"> 
         {% block content %}{% endblock %}
     </div>
 
