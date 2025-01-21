@@ -61,7 +61,7 @@
         });
         // Initialize for threat actors with remote search
         new TomSelect('#threat_actors', {
-            create: false,
+            create: true,
             plugins: ['remove_button'],
             load: function (query, callback) {
                 if (!query.length) return callback();
@@ -71,17 +71,14 @@
                     .then(data => {
                         // Assuming data is an array of strings
                         // Prepare options
-                        const options = data.map(actor => ({ value: actor, text: actor }));
-
-                        // Add a custom option if the input doesn't match existing ones
-                        if (!data.find(actor => actor.toLowerCase() === query.toLowerCase())) {
-                            options.push({ value: query, text: query });
-                        }
-
+                        const options = [];
+                        data.forEach(actor => {
+                            options.push({ value: actor, text: actor });
+                        });
                         callback(options);
                     })
                     .catch(() => {
-                        options.push({ value: query, text: query });
+                        //options.push({ value: query, text: query });
                         callback();
                     });
             },
