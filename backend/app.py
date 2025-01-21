@@ -190,12 +190,11 @@ def save_incident():
         return jsonify({"message": "Incident already exists (same name and description)"}), 409
     # Save the serialized STIX2 objects in the database as a document
     for stix_object in stix_objects:
-        serialized = stix_object.serialize()
         # If the object already exists, skip it
         isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
         if isRepeated:
             continue
-        stix2_objects.insert_one(json.loads(serialized))
+        stix2_objects.insert_one(dict(stix_object))
 
     return jsonify({"message": "Incident saved successfully"}), 201
 
