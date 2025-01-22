@@ -189,7 +189,7 @@ function initializeMap() {
                     const incidents = countries_count.find(
                         (data) => data.name === countryName
                     )?.count || 0;
-                    layer.bindPopup(`<b>${countryName}</b><br>Incidentes: ${incidents}`);
+                    layer.bindPopup(`<b>${countryName}</b><br>Incidents: ${incidents}`);
                 }
             }).addTo(map);
         });
