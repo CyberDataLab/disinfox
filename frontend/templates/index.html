@@ -118,7 +118,7 @@ fetch("{{ url_for('api_latest_incidents') }}")
             a.innerText = `🍣 ${incident.name} - ${incident.modified}`;
             latestIncidents.appendChild(a);
         });
-        Marquee('.marquee', 2);
+        Marquee('.marquee', 0.5);
     });
 
 let countries_count = [];
