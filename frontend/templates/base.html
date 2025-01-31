@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="{% if theme == 'light' %}light{% else %}dark{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,7 @@
 
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home') }}">
+            <a class="navbar-brand bg-dark" href="{{ url_for('home') }}">
                 <img src="{{ url_for('static', filename='images/logo_blackmode.svg') }}" alt="Disinfox logo" width="200" class="d-inline-block align-text-top">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,11 @@
                             </li>
                             {% endif %}
                         {% endif %}
-
+                        <li class="nav-item d-flex align-items-center">
+                            <button id="theme-toggle" class="btn btn-outline-secondary bg-emphasis rounded-pill btn-sm d-flex align-items-center ms-2">
+                                <span id="theme-icon">🌙</span>
+                            </button>
+                        </li>
                 </ul>
             </div>
         </div>
@@ -101,6 +105,24 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const themeToggleBtn = document.getElementById("theme-toggle");
+            const themeIcon = document.getElementById("theme-icon");
+            const currentTheme = localStorage.getItem("theme") || "dark";
+    
+            document.documentElement.setAttribute("data-bs-theme", currentTheme);
+            themeIcon.textContent = currentTheme === "dark" ? "🌙" : "☀️";
+    
+            themeToggleBtn.addEventListener("click", function () {
+                let newTheme = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
+                document.documentElement.setAttribute("data-bs-theme", newTheme);
+                localStorage.setItem("theme", newTheme);
+                themeIcon.textContent = newTheme === "dark" ? "🌙" : "☀️";
+            });
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 <footer class="footer my-5">
