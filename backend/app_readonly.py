@@ -10,6 +10,7 @@ import bcrypt
 import re
 import secrets
 from base64 import b64encode, b64decode
+import datetime
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 DEFAULT_PAGE = 1
@@ -204,6 +205,8 @@ def threat_actor(threat_actor_id):
 def stix2_objects_endpoint():
     # Fetch all the STIX2 objects stored in the database
     newer_than = request.args.get('newer_than', default=None, type=str)
+    newer_than = datetime.datetime.fromisoformat(newer_than.rstrip("Z") + "+00:00") if newer_than else None
+    app.logger.info(f"Fetching STIX2 objects newer than {newer_than}")
     # Fetch the incidents from the database
     if newer_than:
         total_objects = stix2_objects.count_documents({"modified": {"$gt": newer_than}})
@@ -211,7 +214,13 @@ def stix2_objects_endpoint():
     else:
         total_objects = stix2_objects.count_documents({})
         objects_cursor = stix2_objects.find({})
-    return build_paginated_json(request, objects_cursor, total_objects), 200
+    
+    objects = list(objects_cursor)
+    # Remove the _id field from the documents
+    for object in objects:
+        object.pop('_id', None)
+    bundle = Bundle(objects=objects, allow_custom=True)
+    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
 
 @app.route('/threat-actors/top', methods=['GET'])
 def top_threat_actors():

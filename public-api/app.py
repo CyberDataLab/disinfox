@@ -51,18 +51,11 @@ def incidents():
     response = requests.get(BACKEND_ROOT + 'stix2-objects', params={'newer_than': newer_than})
     if response.status_code != 200:
         return jsonify({'message': 'Error getting incidents from the DISINFOX backend server'}), 500
-    response_json = response.json()
-    incidents = response_json.get('objects', [])
-    next_link = response_json['links'].get('next', None)
-    # Gather all the incidents from the paginated responses
-    while next_link:
-        response = requests.get(next_link)
-        if response.status_code != 200:
-            return jsonify({'message': 'Error getting incidents from the DISINFOX backend server'}), 500
-        response_json = response.json()
-        incidents.extend(response_json['objects'])
-        next_link = response_json['links'].get('next', None)
-    return jsonify({'incidents': incidents})
+    bundle = response.json()
+    app.logger.info("Returning incidents " +  str(bundle) + " to the client")
+    if 'objects' not in bundle:
+        return jsonify({}), 200, {'Content-Type': 'application/json'}
+    return jsonify(bundle), 200, {'Content-Type': 'application/json'}
 
 
 
