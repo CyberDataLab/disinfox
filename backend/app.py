@@ -68,6 +68,7 @@ def register():
     user_data["password"] = hashed
     # Add favourite incidents list to the user
     user_data["favoriteIncidents"] = []
+    user_data["createdIncidents"] = []
     user_data["api_key"] = build_api_key(email)
     # Insert the user in the database
     users.insert_one(user_data)
@@ -196,7 +197,11 @@ def save_incident():
         if isRepeated:
             continue
         stix2_objects.insert_one(dict(stix_object))
-
+    # Insert the id in the user profile as a created incident
+    users.update_one(
+        {"email": incident_data.get('user')},
+        {"$push": {"createdIncidents": id}}
+    )
     return jsonify({"message": "Incident saved successfully"}), 201
 
 
@@ -236,35 +241,58 @@ def get_incident(incident_id):
 
 @app.route('/bulk-incident', methods=['POST'])
 def save_bulk_incidents():
-    # Here JSON with a list of incidents or a CSV file with the incidents can be uploaded (it comes from a form)
-    ftype = request.files['file'].content_type
-    app.logger.info(f"Received file with content type: {ftype}")
-    stixed_objects = []
-    # If CSV (content-type: text/csv) we parse the CSV and build the STIX2 objects
-    if ftype in ['text/csv','application/vnd.ms-excel']:
-        csv_string = request.files['file'].read().decode('utf-8')
-        incidents = parse_csv_string(csv_string)
-        for incident in incidents:
-            objects, intrusionid = build_stix_objects(incident, disarm_stix2)
-            stixed_objects.extend(objects)
-    elif ftype == 'application/json':
-        stixed_objects = json.loads(request.files['file'].read().decode('utf-8'))['objects']
-    else:
-        return jsonify({"message": "Invalid content type. Only CSV or STIX2 (JSON) are accepted"}), 400
-    
-    app.logger.error(f"Received {len(stixed_objects)} objects")
-    app.logger.error(f"{stixed_objects}, type: {type(stixed_objects)}")
-    repeated = []
-    for stix_object in stixed_objects:
-        app.logger.error(f"Checking object {stix_object}. Type: {type(stix_object)}")
-        isRepeated = stix2_objects.find_one({"id": stix_object["id"]})
-        if isRepeated:
-            app.logger.info(f"Skipping object {stix_object['id']} because it already exists")
-            repeated.append(stix_object['id'])
-            continue
-        stix2_objects.insert_one(dict(stix_object))
+    """Handles bulk upload of incidents via CSV or JSON, storing 'intrusion-set' IDs in the user profile."""
 
-    return jsonify({"message": "Incidents saved successfully", "repeated": repeated}), 201
+    file = request.files.get('file')
+    if not file:
+        return jsonify({"error": "No file provided"}), 400
+
+    ftype = file.content_type
+    usermail = request.form.get('user')
+    if not usermail:
+        return jsonify({"error": "User ID is required"}), 400
+
+    app.logger.info(f"Received file with content type: {ftype}")
+
+    repeated = []  # Dictionary to track repeated objects
+    intrusion_ids = []  # List to store the created 'intrusion-set' IDs (for relating to the user)
+
+    # CSV Upload
+    if ftype in ['text/csv', 'application/vnd.ms-excel']:
+        csv_string = file.read().decode('utf-8')
+        incidents = parse_csv_string(csv_string)
+
+        all_stix_objects = []
+        for incident in incidents:
+            objects, _ = build_stix_objects(incident, disarm_stix2)
+            all_stix_objects.extend(objects)
+    # JSON (STIX2) Upload
+    elif ftype == 'application/json':
+        all_stix_objects = json.loads(file.read().decode('utf-8')).get('objects', [])
+    else:
+        return jsonify({"error": "Unsupported file type"}), 400
+
+    #Check for duplicates and extract intrusion-set IDs in one pass
+    for obj in all_stix_objects:
+        if stix2_objects.find_one({"id": obj["id"]}):
+            repeated.append(obj["id"])
+        else:
+            stix2_objects.insert_one(dict(obj))
+            if obj.get('type') == 'intrusion-set':
+                intrusion_ids.append(obj['id'])  # Extract intrusion-set ID
+    
+    # Update user profile with 'intrusion-set' IDs
+    if intrusion_ids:
+        users.update_one(
+            {"email": usermail},
+            {"$push": {"createdIncidents": intrusion_ids}}
+        )
+
+    return jsonify({
+        "message": "Bulk upload completed",
+        "repeated": repeated
+    }), 200
+
 
 @app.route('/neighbors/<stix_id>', methods=['GET'])
 def neighbors(stix_id):

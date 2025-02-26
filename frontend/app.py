@@ -114,7 +114,12 @@ def profile():
         response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
         if response.status_code == 200:
             favorites.append(response.json())
-    return render_template("profile.html", user=user_data, favorites=favorites)
+    uploaded_incidents = []
+    for incident_id in user_data.get("createdIncidents", []):
+        response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
+        if response.status_code == 200:
+            uploaded_incidents.append(response.json())
+    return render_template("profile.html", user=user_data, favorites=favorites , uploaded_incidents=uploaded_incidents)
 
 @app.route("/profile/delete", methods=["POST"])
 @login_required
@@ -195,8 +200,12 @@ def new_incident():
         # Sent the contents to the backend directly
         app.logger.info("Uploading file...")
         file = file_form.file.data # raw CSV
-        response = requests.post(BACKEND_ROOT + "bulk-incident", files={"file": (file.filename, file, file.content_type)})
-        if response.status_code != 201:
+        # send the file to the backend and add the user who uploaded it
+        response = requests.post(BACKEND_ROOT + "bulk-incident", 
+                                 files={"file": (file.filename, file.read(), file.content_type)}, 
+                                 data={"user": current_user.email}
+                                )
+        if response.status_code != 200:
             return abort(500, description="Error uploading file")
         return redirect(url_for("incidents"), code=302)
 
@@ -210,6 +219,7 @@ def new_incident():
     backend_request["event"] = backend_request["event"][0]
     backend_request["event_description"] = backend_request["event_description"][0]
     backend_request["date"] = backend_request["date"][0]
+    backend_request["user"] = current_user.email
     response = requests.post(BACKEND_ROOT + "incidents", json=backend_request)
     if response.status_code == 201:
         # redirect to the incidents page and alert the user

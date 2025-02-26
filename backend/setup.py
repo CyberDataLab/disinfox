@@ -69,7 +69,9 @@ if __name__ == '__main__':
                 extension = dataset_path.split('.')[-1]
                 content_type = 'application/json' if extension == 'json' else 'text/csv'
                 response = requests.post(BACKEND_ROOT + 'bulk-incident', 
-                                        files={'file': ('incidents.' + extension, incidents, content_type)})
+                                        files={'file': ('incidents.' + extension, incidents, content_type)},
+                                        data={"user": os.environ['TEST_USER_EMAIL']})
+
                 response.raise_for_status()
     except Exception as e:
         print("[SETUP] Failed to load incidents dataset:", e)
