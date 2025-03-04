@@ -200,7 +200,7 @@ def save_incident():
     # Insert the id in the user profile as a created incident
     users.update_one(
         {"email": incident_data.get('user')},
-        {"$push": {"createdIncidents": id}}
+        {"$addToSet": {"createdIncidents": id}}
     )
     return jsonify({"message": "Incident saved successfully"}), 201
 
@@ -281,12 +281,11 @@ def save_bulk_incidents():
             if obj.get('type') == 'intrusion-set':
                 intrusion_ids.append(obj['id'])  # Extract intrusion-set ID
     
-    # Update user profile with 'intrusion-set' IDs
-    if intrusion_ids:
-        users.update_one(
-            {"email": usermail},
-            {"$push": {"createdIncidents": intrusion_ids}}
-        )
+    # Update user profile with the intrusion-set IDs
+    users.update_one(
+        {"email": usermail},
+        {"$addToSet": {"createdIncidents": {"$each": intrusion_ids}}
+    })
 
     return jsonify({
         "message": "Bulk upload completed",
