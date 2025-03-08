@@ -17,4 +17,4 @@ COPY . .
 # EXPOSE $FLASK_RUN_PORT
 
 # Define the command to run the application
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]

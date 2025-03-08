@@ -4,3 +4,4 @@ pymongo==4.10.1
 python-dotenv==1.0.1
 stix2==3.0.1
 bcrypt==3.2.0
+gunicorn==23.0.0
