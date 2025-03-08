@@ -34,6 +34,7 @@ services:
       - BACKEND_HOST=backend
       - BACKEND_PORT=5000
       - LAST_UPDATE=${LAST_COMMIT}
+      - SECRET_KEY=${FRONTEND_SECRET_KEY}
 
   public-api:
     build: ./public-api

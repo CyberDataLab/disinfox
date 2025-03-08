@@ -46,6 +46,7 @@ services:
       - FLASK_APP=app_readonly.py
       - FLASK_DEBUG=1
       - API_KEY_READONLY=${API_KEY_READONLY}
+      - SECRET_KEY=${FRONTEND_SECRET_KEY}
 
     volumes:
       - ./frontend:/app

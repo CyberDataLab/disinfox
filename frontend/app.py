@@ -12,7 +12,7 @@ from models import User, Anonymous
 from datetime import timedelta
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "secretkey"
+app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 bootstrap = Bootstrap5(app)
 login_manager = LoginManager()
 login_manager.init_app(app)

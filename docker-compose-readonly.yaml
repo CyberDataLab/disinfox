@@ -40,6 +40,7 @@ services:
       - READONLY=True
       - API_KEY_READONLY=${API_KEY_READONLY}
       - FLASK_APP=app_readonly.py
+      - SECRET_KEY=${FRONTEND_SECRET_KEY}
 
 
   public-api:

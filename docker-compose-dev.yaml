@@ -57,6 +57,7 @@ services:
       - BACKEND_PORT=5000
       - LAST_UPDATE=${LAST_COMMIT}
       - FLASK_DEBUG=1
+      - SECRET_KEY=${FRONTEND_SECRET_KEY}
     volumes:
       - ./frontend:/app
 
