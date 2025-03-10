@@ -5,61 +5,72 @@
 <h1>Incidents</h1>
 <p> There are currently {{ total_incidents }} incidents in the database. You are viewing {{ incidents|length }}
     incidents in this page.</p>
-<a href="{{ url_for('new_incident') }}" class="btn btn-primary">Add new incident</a>
+    <div class="d-flex flex-column flex-md-row align-items-center gap-2">
 
+        <a href="{{ url_for('new_incident') }}" class="btn btn-primary flex-shrink-0">🗞️ Add <b>new</b> incident</a>
+
+        <form action="{{ url_for('search_incidents') }}" method="GET" class="d-flex flex-grow-1">
+            <input class="form-control me-2 flex-grow-1" type="search" placeholder="Search incidents" aria-label="Search" name="query">
+            <button class="btn btn-outline-success flex-shrink-0" type="submit">🔎 Search</button>
+        </form>
+    
+    </div>
+    
+    
+    <hr>    
 <!-- Table listing of incidents -->
-<div class="table-responsive">
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th scope="col">Incident name</th>
-            <th scope="col">Description</th>
-            <th scope="col">Date</th>
-            <th scope="col">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for incident in incidents %}
-        <tr>
-            <td class="text-truncate name" style="word-wrap: break-word; max-width: 300px;">
-                <div>
-                    {{ incident.name }}
-                </div>
-                <div>
-                    <small class="text-muted">
-                        {{ incident.id }}
-                    </small>
-            </td>
-            <!-- We just show the first 200 characters of the description -->
-            <td class="text-truncate description" style="word-wrap: break-word; min-width: 20px; max-width: 500px;">
-                {{ incident.description }}
-            </td>
-            <td>{{ incident.first_seen }}</td>
-            <td>
-                <!-- Button to trigger modal -->
-                <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-info">View</a>
-                <!-- Favorite button with a star icon filled and unfilled depending on the favorite status -->
-                <button class="btn btn-warning" onclick="toggleFavorite('{{ incident.id }}')"
-                    id="favoriteBtn-{{ incident.id }}">
-                    {% if incident.favorited %}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        class="bi bi-star-fill" viewBox="0 0 16 16">
-                        <path
-                            d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-                    </svg>
-                    {% else %}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        class="bi bi-star" viewBox="0 0 16 16">
-                        <path
-                            d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894a.5.5 0 0 0-.461 0z" />
-                    </svg>
-                    {% endif %}
-                </button>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-responsive mt-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Incident name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Date</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents %}
+            <tr>
+                <td class="text-truncate name" style="word-wrap: break-word; max-width: 300px;">
+                    <div>
+                        {{ incident.name }}
+                    </div>
+                    <div>
+                        <small class="text-muted">
+                            {{ incident.id }}
+                        </small>
+                </td>
+                <!-- We just show the first 200 characters of the description -->
+                <td class="text-truncate description" style="word-wrap: break-word; min-width: 20px; max-width: 500px;">
+                    {{ incident.description }}
+                </td>
+                <td>{{ incident.first_seen }}</td>
+                <td>
+                    <!-- Button to trigger modal -->
+                    <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-info">View</a>
+                    <!-- Favorite button with a star icon filled and unfilled depending on the favorite status -->
+                    <button class="btn btn-warning" onclick="toggleFavorite('{{ incident.id }}')"
+                        id="favoriteBtn-{{ incident.id }}">
+                        {% if incident.favorited %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-star-fill" viewBox="0 0 16 16">
+                            <path
+                                d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-star" viewBox="0 0 16 16">
+                            <path
+                                d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894a.5.5 0 0 0-.461 0z" />
+                        </svg>
+                        {% endif %}
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 <!-- Pagination, we have the actual page, max_selectable_pages and npages. 
         Here, we will have max_selectable_pages to click on, and npages in total.

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Incident search</h1>
+<p> There were {{ total_incidents }} incidents found in the database. You are viewing {{ incidents|length }}
+    incidents in this page.</p>
+
+<!-- Table listing of incidents -->
+<div class="table-responsive mt-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Incident name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Date</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents %}
+            <tr>
+                <td class="text-truncate name" style="word-wrap: break-word; max-width: 300px;">
+                    <div>
+                        {{ incident.name }}
+                    </div>
+                    <div>
+                        <small class="text-muted">
+                            {{ incident.id }}
+                        </small>
+                </td>
+                <!-- We just show the first 200 characters of the description -->
+                <td class="text-truncate description" style="word-wrap: break-word; min-width: 20px; max-width: 500px;">
+                    {{ incident.description }}
+                </td>
+                <td>{{ incident.first_seen }}</td>
+                <td>
+                    <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-info">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination, we have the actual page, max_selectable_pages and npages. 
+        Here, we will have max_selectable_pages to click on, and npages in total.
+        If max_selectable_pages-1 < npages, we will have a "..." to show that there are more pages. -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('search_incidents', page=page-1, query=query) }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for p in range(1, npages+1) %}
+                {% if p == page %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ p }}<span class="visually-hidden">(current)</span></span>
+                </li>
+                {% elif p == 1 or p == npages or (p >= page - max_selectable_pages//2 and p <= page + max_selectable_pages//2)
+                    %} <li class="page-item">
+                    <a class="page-link" href="{{ url_for('search_incidents', page=p, query=query) }}">{{ p }}</a>
+                    </li>
+                    {% elif p == 2 or p == npages-1 %}
+                    <li class="page-item">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page < npages %} <li class="page-item">
+                        <a class="page-link" href="{{ url_for('search_incidents', page=page+1, query=query) }}">Next</a>
+                        </li>
+                        {% endif %}
+            </ul>
+        </nav>
+
+{% endblock %}
+

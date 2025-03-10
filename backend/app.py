@@ -213,15 +213,15 @@ def get_incidents():
     sort_field = request.args.get('sort', default=DEFAULT_SORT_FIELD, type=str)
     sort_order = request.args.get('order', default=DEFAULT_SORT_ORDER, type=str)
     newer_than = request.args.get('newer_than', default=None, type=str)
+    query = request.args.get('q', default="", type=str)
 
-
-    # Fetch the incidents from the database
+    # query searching the word in the name and description fields
+    query_filter = {"type": "intrusion-set", "$or": [{"name": {"$regex": query, "$options": "i"}}, {"description": {"$regex": query, "$options": "i"}}]}
     if newer_than:
-        total_incidents = stix2_objects.count_documents({"type": "intrusion-set", "modified": {"$gt": newer_than}})
-        incidents_cursor = stix2_objects.find({"type": "intrusion-set", "modified": {"$gt": newer_than}})
-    else:
-        total_incidents = stix2_objects.count_documents({"type": "intrusion-set"})
-        incidents_cursor = stix2_objects.find({"type": "intrusion-set"})
+        query_filter["modified"] = {"$gt": newer_than}
+    
+    total_incidents = stix2_objects.count_documents(query_filter)
+    incidents_cursor = stix2_objects.find(query_filter)
     
     incidents_cursor.sort(sort_field, -1 if sort_order == "desc" else 1)
     

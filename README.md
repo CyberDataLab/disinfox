@@ -72,7 +72,7 @@ Log in with the default credentials (if not modified):
 
 ### 📰 Incident management  
 
-The **Incidents** page provides a structured view of all reported disinformation incidents.  
+The **Incidents** page provides a structured view of all reported disinformation incidents and a search bar to quickly find specific incidents. 
 
 ![DISINFOX disinformation incident listing](imgs/listing.png)
 

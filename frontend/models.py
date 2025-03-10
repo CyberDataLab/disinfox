@@ -4,9 +4,9 @@ from flask import session
 
 class Anonymous(AnonymousUserMixin):
     def __init__(self):
-        self.email = 'guest@example.org'
-        self.firstName = 'Nice'
-        self.lastName = 'Guest'
+        self.email = 'no-auth'
+        self.firstName = 'Guest'
+        self.lastName = 'User'
     def get_favourite_incidents(self):
         return session.get('favoriteIncidents', [])
     def add_favourite_incident(self, incident_id):

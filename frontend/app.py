@@ -313,6 +313,22 @@ def remove_favorite(incident_id):
             return abort(500, description="Error deleting favorite")
     return redirect(url_for("profile"), code=302)
 
+
+@app.route("/search", methods=["GET"])
+def search_incidents():
+    query = request.args.get("query")
+    page = request.args.get("page", 1, type=int)
+    if not query:
+        return "No query", 400
+    response = requests.get(BACKEND_ROOT + "incidents", params={"q": query, "page": page, "limit": LISTING_LIMIT})
+    if response.status_code != 200:
+        return abort(500, description="Error searching")
+    incidents_response = response.json()
+    npages = incidents_response.get("total_incidents", 0) // incidents_response.get("limit", LISTING_LIMIT) + 1
+    total_incidents = incidents_response.get("total_incidents", 0)
+    return render_template("search.html", query=query,
+                            incidents=incidents_response.get("incidents", []),
+                            npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
 @app.route("/threat-actors/", methods=["GET", "POST"])
 #@login_required
 def threat_actors():
