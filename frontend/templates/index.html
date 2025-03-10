@@ -28,7 +28,7 @@
         <div class="row mt-2">
             <div class="col-12 col-md-4 mb-4">
                 <h4 class="fw-bold">👺 Top Threat Actors</h4>
-                <table class="table table-sm">
+                <table class="table table-sm table-hover">
                     <thead>
                         <tr>
                             <th scope="col">Name</th>
@@ -99,6 +99,10 @@ fetch("{{ url_for('api_top_threat_actors') }}")
         const topThreatActors = document.getElementById('top_threat_actors');
         data.forEach(actor => {
             const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.onclick = () => {
+                window.location.href = "{{ url_for('threat_actor', ta_id='') }}" + actor.id;
+            };
             row.innerHTML = `
                 <td>${actor.name}</td>
                 <td>${actor.count}</td>
