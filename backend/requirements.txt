@@ -5,3 +5,4 @@ python-dotenv==1.0.1
 stix2==3.0.1
 bcrypt==3.2.0
 gunicorn==23.0.0
+iocsearcher==2.5.3

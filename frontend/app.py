@@ -4,7 +4,7 @@ import pycountry
 import os
 import json
 from flask_bootstrap import Bootstrap5
-from forms import IncidentForm, FileUploadForm, LoginForm, RegisterForm
+from forms import FileSourceForm, IncidentForm, FileBulkIncidentForm, LoginForm, RegisterForm
 from incident_export import export_incident_to_pdf, export_incident_to_word
 
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -191,15 +191,17 @@ def incident(incident_id):
 @login_required
 def new_incident():
     incident_form = IncidentForm()
-    file_form = FileUploadForm()
+    bulk_file_form = FileBulkIncidentForm()
+    source_file_form = FileSourceForm()
+
     if request.method == "GET":
-        return render_template("incidents_new.html", incident_form=incident_form, file_form=file_form)
+        return render_template("incidents_new.html", incident_form=incident_form, file_form=bulk_file_form, source_file_form=source_file_form)
     
     # detect if the submit form was the file upload form or the incident form
-    if file_form.file.data is not None and file_form.validate_on_submit():
+    if bulk_file_form.file.data is not None and bulk_file_form.validate_on_submit():
         # Sent the contents to the backend directly
         app.logger.info("Uploading file...")
-        file = file_form.file.data # raw CSV
+        file = bulk_file_form.file.data # raw CSV
         # send the file to the backend and add the user who uploaded it
         response = requests.post(BACKEND_ROOT + "bulk-incident", 
                                  files={"file": (file.filename, file.read(), file.content_type)}, 
@@ -229,6 +231,27 @@ def new_incident():
     else:
         return abort(500, description="Error creating incident")
     
+@app.route("/incidents/new/autocomplete", methods=["POST"])
+def autocomplete():
+    file = request.files.get("file")
+    source_file_form = FileSourceForm()
+    if file is None:
+        return abort(400, description="No file")
+    if not source_file_form.file.validate(file):
+        return abort(400, description="Invalid file")
+    response = requests.post(BACKEND_ROOT + "indicators_extraction", files={"file": (file.filename, file.read(), file.content_type)})
+    if response.status_code != 200:
+        return abort(500, description="Error processing file")
+    iocs = response.json()
+    app.logger.info("Extracted IOCs: " + str(iocs))
+    # merge the URLs and FQDNs
+    urlsfqdn = iocs.get("url", []) + iocs.get("fqdn", [])
+    incident_form=IncidentForm()
+    incident_form.techniques.data = iocs.get("ttp", [])
+    incident_form.sources.choices = [(ioc, ioc) for ioc in urlsfqdn]
+    incident_form.sources.data = urlsfqdn
+    return render_template("incidents_new.html", incident_form=incident_form, file_form=FileBulkIncidentForm(), source_file_form=source_file_form)
+
 @app.route("/incidents/<incident_id>/export", methods=["GET"])
 def export_incident(incident_id):
     doc_type = request.args.get("type")

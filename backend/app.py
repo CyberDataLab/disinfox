@@ -11,6 +11,8 @@ import re
 import secrets
 from base64 import b64encode, b64decode
 import datetime
+from iocsearcher.document import open_document
+from iocsearcher.searcher import Searcher
 
 DISARM_MATRIX_PATH = path.join(path.dirname(__file__), 'data', 'DISARM.json')
 DEFAULT_PAGE = 1
@@ -410,6 +412,43 @@ def stix2_objects_endpoint():
     bundle = Bundle(objects=objects, allow_custom=True)
     return bundle.serialize(), 200, {'Content-Type': 'application/json'}
 
+@app.route('/indicators_extraction', methods=['POST'])
+def indicators_extraction():
+    # Extract indicators from a PDF
+    file = request.files.get('file')
+    if not file:
+        return jsonify({"error": "No file provided"}), 400
+    if file.content_type not in ['application/pdf']:
+        return jsonify({"error": "Unsupported file type"}), 400
+    # Save the file in the server with a random name
+    name = secrets.token_hex(16) + ".pdf"
+    file_path = path.join(path.dirname(__file__), 'uploads', name)
+    file.save(file_path)
+
+    doc = open_document(file_path)
+    if doc is None:
+        return jsonify({"error": "Unsupported file type"}), 400
+    text,_ = doc.get_text()
+    searcher = Searcher()
+    indicators = searcher.search_data(text)
+    # Transform the resulting [(type, value)] list to a dictionary list [{"<type>": ["valueoftype1", "valueoftype2"]}]
+    gathered_indicators = {}
+    for indicator in indicators:
+        if indicator.name not in gathered_indicators:
+            gathered_indicators[indicator.name] = []
+        gathered_indicators[indicator.name].append(indicator.value)
+    # For the TTPs, find the corresponding DISARM technique, inserting "ID: Technique name"
+    for ttp in gathered_indicators.get("ttp", []):
+        stix_technique = find_stix_disarm_technique(disarm_stix2, ttp)
+        gathered_indicators["ttp"].remove(ttp)
+        if stix_technique:
+            gathered_indicators["ttp"].append(f"{ttp}: {stix_technique['name']}")
+
+    # Remove the file from the filesystem
+    file.close()
+        
+    return jsonify(gathered_indicators), 200
+    
 
 '''
 # Build a list of STIX2 objects and relationships from the "form" JSON data
@@ -459,21 +498,13 @@ def build_stix_objects(incident_data, disarm_stix2):
     # Get the techniques (DISARM) associated with this incident
     technique_objects = []
     for technique in incident_data.get('techniques', []):
-        technique_disarm_id = technique
+        technique_disarm_id = technique.split(": ")[0]
         # Search in the DISARM dictionary, the STIX ID of the technique to create the relationship
-        technique_id = None
-        for stix_object in disarm_stix2:
-            #print("STIX OBJECT" + stix_object["type"])
-            if (stix_object["type"]!="attack-pattern"):
-                continue
-            mitre_id = stix_object.get("external_references")[0].get("external_id")
-            #print(mitre_id)
-            if (mitre_id and mitre_id == technique_disarm_id.split(": ")[0]):
-                    technique_objects.append(stix_object)
-                    break
-        if not technique_objects:
-            print(f"Technique {technique_disarm_id} not found in DISARM.json")
-            continue
+        stix_technique = find_stix_disarm_technique(disarm_stix2, technique_disarm_id)
+        if stix_technique:
+            technique_objects.append(stix_technique)
+        else:
+            app.logger.warn(f"Technique {technique_disarm_id} not found in DISARM matrix")
 
 
     # Create a IntrusionSet object to represent the incident
@@ -512,6 +543,17 @@ def build_stix_objects(incident_data, disarm_stix2):
         stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="targets", target_ref=country.id))
 
     return  stix_objects, intrusion_object.id
+
+def find_stix_disarm_technique(disarm_stix2, technique_disarm_id):
+    for stix_object in disarm_stix2:
+            #print("STIX OBJECT" + stix_object["type"])
+        if (stix_object["type"]!="attack-pattern"):
+            continue
+        mitre_id = stix_object["external_references"][0]["external_id"]
+        if (mitre_id and (mitre_id == technique_disarm_id)):
+            return stix_object
+    app.logger.warn(f"Technique {technique_disarm_id} not found in DISARM matrix")
+    return None
 
 def build_paginated_json(request, cursor, total_objects, objects_name="objects"):
     # Pagination parameters

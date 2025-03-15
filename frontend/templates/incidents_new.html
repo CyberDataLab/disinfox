@@ -26,6 +26,15 @@
     <div class="tab-content" id="formTabsContent">        <!-- Incident Form Tab -->
         <div class="tab-pane fade show active" id="incident" role="tabpanel" aria-labelledby="incident-tab">
             <p class="mt-3">Please fill out the form below to report a new incident.</p>
+            <p class="mt-1">Upload the source PDF report of the incident if available for automatic extraction of some fields.</p>
+            <p class="text-muted">Supported file formats: {{ source_file_form.file.accept }}</p>
+            <hr>
+            <form method="POST" action="{{ url_for('autocomplete') }}" enctype="multipart/form-data">
+                {{ source_file_form.hidden_tag() }}
+                {{ source_file_form.file }}
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+            <hr>
             <p class="text-muted">Fields marked with <span class="text-danger">*</span> are required.</p>
             <form method="POST" action="{{ url_for('new_incident') }}">
                 {{ incident_form.hidden_tag() }}
@@ -49,7 +58,6 @@
 
 {% block scripts %}
 <script>
-    // Initialize Tom Select for multi-select fields
     document.addEventListener('DOMContentLoaded', function () {
         new TomSelect('#target_countries', {
             create: false,

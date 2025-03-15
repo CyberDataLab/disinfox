@@ -39,7 +39,7 @@ if not techniques:
 
 displayed_techniques = [f"{technique['disarm_id']}: {technique['name']}" for technique in techniques]
 
-class NonValidatingSelectField(SelectField):
+class NonValidatingSelectField(SelectMultipleField):
     """
     Attempt to make an open ended select multiple field that can accept dynamic
     choices added by the browser.
@@ -50,21 +50,23 @@ class NonValidatingSelectField(SelectField):
 class IncidentForm(FlaskForm):
     event = StringField('Incident name *', validators=[DataRequired()], id="event", name="event")
     description = TextAreaField('Description *', validators=[DataRequired()], id="event_description", name="event_description")
-    date = DateField('Date *', validators=[DataRequired()])
+    date = DateField('Date *', validators=[DataRequired()], id="date", name="date")
     target_countries = SelectMultipleField('Target countries *', choices=available_countries, validators=[DataRequired()], coerce=str, id="target_countries", render_kw={"multiple": "multiple"}, description="Select at least one country")
     # the threat actor field choices is given dynamically
     threat_actors = NonValidatingSelectField('Threat actors *', validators=[DataRequired()], coerce=str, id="threat_actors", render_kw={"multiple": "multiple"}, description="Select multiple threat actors, if unknown, select 'Unknown'")
-    techniques = SelectMultipleField('Techniques', choices=displayed_techniques)
-    sources = SelectMultipleField('Sources', choices=[
-        ('source1', 'Source 1'),
-        ('source2', 'Source 2'),
-        ('source3', 'Source 3'),
-    ])
+    techniques = SelectMultipleField('Techniques', choices=displayed_techniques, coerce=str, id="techniques", render_kw={"multiple": "multiple"}, description="Select multiple techniques")
+    # now the sources, when constructed, a list of strings will be passed
+    sources = NonValidatingSelectField('Sources *', choices=[], validators=[DataRequired()], coerce=str, id="sources", render_kw={"multiple": "multiple"}, description="Select multiple sources")
     submit = SubmitField('Submit Incident')
 
-class FileUploadForm(FlaskForm):
+class FileBulkIncidentForm(FlaskForm):
     file = FileField('Upload File', 
                      validators=[FileRequired(), FileAllowed(['json', 'csv'], 'Only JSON and CSV files are accepted')],
+                     id="file", name="file")
+
+class FileSourceForm(FlaskForm):
+    file = FileField('Upload File', 
+                     validators=[FileRequired(), FileAllowed(['pdf'], 'Only PDF files are accepted')],
                      id="file", name="file")
 
 class RegisterForm(FlaskForm):
