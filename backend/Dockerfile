@@ -8,6 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install the dependencies
+RUN apt-get update && apt-get install -y libmagic1
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
@@ -16,5 +17,8 @@ COPY . .
 # Expose the port the app runs on with the environment variable
 # EXPOSE $FLASK_RUN_PORT
 
-# Define the command to run the application
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+# Define the command to run the application depending on the environment
+CMD if [ "$FLASK_DEBUG" = "1" ]; \
+    then flask run --host=0.0.0.0 --port=5000; \
+    else gunicorn -b 0.0.0.0:5000 app:app; \
+    fi 
