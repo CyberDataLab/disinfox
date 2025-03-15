@@ -26,20 +26,84 @@
     <div class="tab-content" id="formTabsContent">        <!-- Incident Form Tab -->
         <div class="tab-pane fade show active" id="incident" role="tabpanel" aria-labelledby="incident-tab">
             <p class="mt-3">Please fill out the form below to report a new incident.</p>
-            <p class="mt-1">Upload the source PDF report of the incident if available for automatic extraction of some fields.</p>
-            <p class="text-muted">Supported file formats: {{ source_file_form.file.accept }}</p>
-            <hr>
+            <div class="alert alert-info">
             <form method="POST" action="{{ url_for('autocomplete') }}" enctype="multipart/form-data">
+                ⭐ Upload the source PDF report of the incident if available for automatic extraction of some fields. 
                 {{ source_file_form.hidden_tag() }}
                 {{ source_file_form.file }}
                 <button type="submit" class="btn btn-primary">Upload</button>
             </form>
+            {% if source_file_form.file.data %}
+            <div class="alert alert-success mt-3 mb-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                  </svg>
+                Autocompleted the form with found data. <b>Please review the fields and submit the form.</b>
+            </div>
+            {% endif %}
+            </div>
             <hr>
             <p class="text-muted">Fields marked with <span class="text-danger">*</span> are required.</p>
-            <form method="POST" action="{{ url_for('new_incident') }}">
+            <form method="POST" action="{{ url_for('new_incident') }}" class="">
                 {{ incident_form.hidden_tag() }}
-                {{ render_form(incident_form) }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ incident_form.event.label(class="form-label") }}
+                        {{ incident_form.event(class="form-control") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ incident_form.date.label(class="form-label") }}
+                        {{ incident_form.date(class="form-control") }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    {{ incident_form.description.label(class="form-label") }}
+                    {{ incident_form.description(class="form-control", rows=3) }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ incident_form.target_countries.label(class="form-label") }}
+                        {{ incident_form.target_countries(class="form-select") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ incident_form.threat_actors.label(class="form-label") }}
+                        {{ incident_form.threat_actors(class="form-select") }}
+                    </div>
+                </div>
+                <div class="row">    
+                    <div class="col-md-6 mb-3">
+                        {{ incident_form.techniques.label(class="form-label") }}  
+                        {% if incident_form.techniques.data %}
+                        <button type="button" class="badge rounded-pill text-light ms-2 bg-success border border-success"
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Found techniques!" aria-label="Found techniques!">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                            </svg>
+                            Found techniques!
+                        </button>
+                        {% endif %}
+                        {{ incident_form.techniques(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        {{ incident_form.sources.label(class="form-label") }}
+                        {% if incident_form.sources.data %}
+                        <button type="button" class="badge rounded-pill text-light ms-2 bg-success border border-s
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Found techniques!" aria-label="Found techniques!">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                            </svg>
+                            Found sources!
+                        </button>
+                        {% endif %}
+                        {{ incident_form.sources(class="form-select") }}
+                    </div>
+                </div>
+                <div class="text-center">
+                    {{ incident_form.submit(class="btn btn-primary") }}
+                </div>
             </form>
+            
         </div>
         
         <!-- Other Form Tab -->

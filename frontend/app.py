@@ -250,7 +250,8 @@ def autocomplete():
     incident_form.techniques.data = iocs.get("ttp", [])
     incident_form.sources.choices = [(ioc, ioc) for ioc in urlsfqdn]
     incident_form.sources.data = urlsfqdn
-    return render_template("incidents_new.html", incident_form=incident_form, file_form=FileBulkIncidentForm(), source_file_form=source_file_form)
+    return render_template("incidents_new.html", incident_form=incident_form, 
+                           file_form=FileBulkIncidentForm(), source_file_form=source_file_form)
 
 @app.route("/incidents/<incident_id>/export", methods=["GET"])
 def export_incident(incident_id):
