@@ -46,8 +46,6 @@ services:
     environment:
       - BACKEND_HOST=backend
       - BACKEND_PORT=5000
-    volumes:
-      - ./public-api:/app
 
 volumes:
   mongo-data:
