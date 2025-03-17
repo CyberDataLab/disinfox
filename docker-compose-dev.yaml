@@ -43,7 +43,7 @@ services:
       - FLASK_DEBUG=1
     volumes:
       - ./backend:/app
-      
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build: ./frontend

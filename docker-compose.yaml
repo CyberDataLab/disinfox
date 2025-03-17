@@ -21,7 +21,8 @@ services:
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - TEST_USER_EMAIL=${TEST_USER_EMAIL}
       - TEST_USER_PASSWORD=${TEST_USER_PASSWORD}
-      
+    volumes:
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build: ./frontend

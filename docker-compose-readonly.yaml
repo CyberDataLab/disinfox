@@ -25,6 +25,8 @@ services:
       # we set a different app.py file for the readonly version
       - FLASK_APP=app_readonly.py
       - API_KEY_READONLY=${API_KEY_READONLY}
+    volumes:
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build: ./frontend

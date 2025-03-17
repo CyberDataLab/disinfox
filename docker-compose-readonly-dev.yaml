@@ -30,7 +30,8 @@ services:
       - API_KEY_READONLY=${API_KEY_READONLY}
     volumes:
       - ./backend:/app
-      
+      - ./backend/uploads:/app/uploads
+
   frontend:
     build: ./frontend
     ports:

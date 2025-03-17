@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . .
 
+# create the uploads folder
+RUN mkdir uploads
+
 # Expose the port the app runs on with the environment variable
 # EXPOSE $FLASK_RUN_PORT
 
