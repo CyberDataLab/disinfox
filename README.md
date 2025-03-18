@@ -185,7 +185,22 @@ If done correctly, the API will return a JSON object with the new incidents crea
 DISINFOX features a **custom OpenCTI connector**, allowing seamless ingestion of disinformation incidents into OpenCTI for enhanced analysis and correlation.
 You can find the repository here: <https://github.com/CyberDataLab/opencti-connector-disinfox>.
 
----
+## 📖 Citation
+
+If you use DISINFOX in your research, please cite our work ❤️:
+
+```bibtex
+@misc{gonzález2025interoperablerepresentationsharingdisinformation,
+      title={Toward interoperable representation and sharing of disinformation incidents in cyber threat intelligence}, 
+      author={Felipe Sánchez González and Javier Pastor-Galindo and José A. Ruipérez-Valiente},
+      year={2025},
+      eprint={2502.20997},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2502.20997}, 
+}
+```
+
 
 ## 📢 Contributing
 
