@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # create the uploads folder
-RUN mkdir uploads
+# RUN mkdir uploads
 
 # Expose the port the app runs on with the environment variable
 # EXPOSE $FLASK_RUN_PORT
