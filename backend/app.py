@@ -22,6 +22,13 @@ DEFAULT_SORT_ORDER = "desc"
 API_KEY_SEPARATOR = "."
 API_KEY_RANDOM_LENGTH = 32
 API_KEY_IDENTIFIER = "DISINFOX"
+IDENTITY_ID = None
+with open(environ.get("PLATFORM_STIX_IDENTITY_PATH", 'platform_stix_identity.json'), 'r') as f:
+    identity = parse(f.read(), allow_custom=True)
+    IDENTITY_ID = identity["id"]
+if not IDENTITY_ID:
+    print("Invalid platform STIX identity")
+    exit(1)
 
 load_dotenv()
 app = Flask(__name__)
@@ -327,6 +334,14 @@ def neighbors(stix_id):
         relationship.pop('_id', None)
         related_objects.append(relationship)
 
+    # Other relationships as created_by_ref
+    created_ref = incident.get("created_by_ref")
+    if created_ref:
+        creator = stix2_objects.find_one({"id": incident["created_by_ref"]})
+        if creator:
+            creator.pop('_id', None)
+            related_objects.append(creator)
+
     bundle = Bundle(objects=related_objects, allow_custom=True)
     return bundle.serialize(), 200, {'Content-Type': 'application/json'}
 
@@ -477,7 +492,8 @@ def build_stix_objects(incident_data, disarm_stix2):
             id="threat-actor--" + str(uuid5(NAMESPACE_UUID, actor_id)),
             name=actor_name,
             threat_actor_types = ["nation-state"],
-            labels=["threat-actor"]
+            labels=["threat-actor"],
+            created_by_ref=IDENTITY_ID
         )
         actor_objects.append(threat_actor)
     
@@ -491,7 +507,8 @@ def build_stix_objects(incident_data, disarm_stix2):
         country_object = Location(
             id="location--" + str(uuid5(NAMESPACE_UUID, country_id)),
             name=country_name,
-            country=country
+            country=country,
+            created_by_ref=IDENTITY_ID
         )
         location_objects.append(country_object)
 
@@ -521,7 +538,8 @@ def build_stix_objects(incident_data, disarm_stix2):
         name=intrusion_name,
         description=intrusion_description,
         first_seen=incident_first_seen,
-        labels=["incident", "disinformation"]
+        labels=["incident", "disinformation"],
+        created_by_ref=IDENTITY_ID
     )
 
     # Add the objects to the list
@@ -532,15 +550,15 @@ def build_stix_objects(incident_data, disarm_stix2):
 
     # Create the relationships between the techniques and the intrusion object
     for technique in technique_objects:
-        stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="uses", target_ref=technique.id))
+        stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="uses", target_ref=technique.id, created_by_ref=IDENTITY_ID))
     
     # Create the relationships between the actors and the intrusion object
     for actor in actor_objects:
-        stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="attributed-to", target_ref=actor.id))
+        stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="attributed-to", target_ref=actor.id, created_by_ref=IDENTITY_ID))
 
     # Create the relationship between the locations and the intrusion object
     for country in location_objects:
-        stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="targets", target_ref=country.id))
+        stix_objects.append(Relationship(source_ref=intrusion_object.id, relationship_type="targets", target_ref=country.id, created_by_ref=IDENTITY_ID))
 
     return  stix_objects, intrusion_object.id
 

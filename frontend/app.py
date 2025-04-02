@@ -394,15 +394,16 @@ def get_threat_actors():
 @app.route('/api/incident-details/<incident_id>', methods=['GET'])
 #@login_required
 def api_incident_detailed_bundle(incident_id):
-    incident_stix_bundle = {}
+    stix_bundle = {}
     try:
         response = requests.get(BACKEND_ROOT + f"neighbors/{incident_id}")
         if response.status_code == 200:
             app.logger.info(response.json())
             stix_bundle = response.json()
+        else:
+            abort(500, description="Error getting incident")
     except:
         pass
-    json_response = stix_bundle
     # json_response = {}
     # for stix_object in incident["bundle"]["objects"]:
     #     if stix_object["type"] == "location":

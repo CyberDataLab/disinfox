@@ -1,5 +1,7 @@
 import os
 import requests
+from stix2 import parse, Bundle
+import json
 
 BACKEND_ROOT = "http://localhost:5000/"
 INCIDENTS_DATASET_PATHS = ['data/merged_Foulde_DSRM_additions.csv']
@@ -53,6 +55,26 @@ if __name__ == '__main__':
         exit(1)
     print("[SETUP] [OK] User registered successfully")
 
+    # Load the platform STIX identity
+    with open(os.environ.get('PLATFORM_STIX_IDENTITY_PATH', 'platform_stix_identity.json'), 'r') as f:
+        identity_json = f.read()
+        identity_json = json.loads(identity_json)
+        identity = parse(identity_json, allow_custom=True)
+        if not identity or identity.type != 'identity':
+            print("[SETUP] [ERROR] Invalid platform STIX identity")
+            exit(1)
+
+    try:
+        response = requests.post(BACKEND_ROOT + 'bulk-incident',
+                                files={'file': ('incidents.json', Bundle(objects=[identity]).serialize(), 'application/json')},
+                                data={"user": os.environ['TEST_USER_EMAIL']}
+                                )
+        response.raise_for_status()
+    except Exception as e:
+        print("[SETUP] Failed to load platform STIX identity:", e)
+        exit(1)
+    print("[SETUP] [OK] Platform STIX identity loaded successfully")
+            
     # Load the incidents
     try:
         response = requests.get(BACKEND_ROOT + 'incidents')
