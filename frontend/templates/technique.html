@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{ technique.name }}</h1>
+
+<div>
+    <div>
+        <b>Name:</b> {{technique.name}}
+    </div>
+    <div>
+        <b>Description:</b> {{technique.description}}
+    </div>
+    <div>
+        <b>Creation date:</b> {{technique.created}}
+    </div>
+    <div>
+        <b>Modification date:</b> {{technique.modified}}
+    </div>
+    <hr>
+    <div>
+        <p><strong>🔎 Found in:</strong></p>
+        <div id="taIncidents" class="d-flex flex-wrap">
+            {% for incident in incidents %}
+                <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-primary me-2 mb-2 border border-primary-subtle">
+                    {{ incident.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

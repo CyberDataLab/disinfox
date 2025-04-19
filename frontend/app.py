@@ -376,6 +376,35 @@ def threat_actor(ta_id):
         return abort(500, description="Error retrieving Threat Actor")
     return render_template("threat_actor.html", threat_actor=response.json())
 
+@app.route("/techniques", methods=["GET"])
+def techniques():
+    techniques = []
+    try:
+        response = requests.get(BACKEND_ROOT + "techniques")
+        if response.status_code == 200:
+            techniques = response.json().get("objects", [])
+    except:
+        return abort(500, description="Error retrieving techniques")
+    return render_template("techniques.html", techniques=techniques)
+
+@app.route("/techniques/<technique_id>", methods=["GET"])
+def technique(technique_id):
+    technique = {}
+    incidents = []
+    try:
+        response = requests.get(BACKEND_ROOT + "techniques/" + technique_id)
+        if response.status_code == 200:
+            technique = response.json()
+        if response.status_code == 404:
+            return abort(404, description="Technique not found")
+        # retrieve the incidents that use this technique
+        response = requests.get(BACKEND_ROOT + "neighbors/" + technique_id, params={"type": "intrusion-set"})
+        if response.status_code == 200:
+            incidents = response.json().get("objects", [])
+    except:
+        return abort(500, description="Error retrieving technique")
+    return render_template("technique.html", technique=technique, incidents=incidents)
+
 @app.route('/api/threat-actors', methods=['GET'])
 def get_threat_actors():
     search = request.args.get('query', None)

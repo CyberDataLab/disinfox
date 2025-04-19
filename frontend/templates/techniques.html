@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Techniques</h1>
+    <p>
+        This page contains a list of techniques used in disinformation campaigns. Each technique is described with its name and description.
+    </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Technique</th>
+                <th scope="col">Description</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for technique in techniques %}
+                <tr>
+                    <td>
+                        {{ technique.external_references.0.external_id }}
+                    </td>
+                    <td>{{ technique.name }}</td>
+                    <!-- The description should be short, if it is too long, truncate it to 100 characters and add "..." -->
+                    <td>
+                        {% if technique.description|length > 100 %}
+                            {{ technique.description[:100] }}...
+                        {% else %}
+                            {{ technique.description }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('technique', technique_id=technique.id) }}" class="btn btn-primary">View</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
