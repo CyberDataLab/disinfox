@@ -381,6 +381,8 @@ def techniques():
     techniques = []
     try:
         response = requests.get(BACKEND_ROOT + "techniques")
+        if response.status_code == 404:
+            return abort(404, description="Techniques not found")
         if response.status_code == 200:
             techniques = response.json().get("objects", [])
     except:
@@ -390,20 +392,15 @@ def techniques():
 @app.route("/techniques/<technique_id>", methods=["GET"])
 def technique(technique_id):
     technique = {}
-    incidents = []
     try:
         response = requests.get(BACKEND_ROOT + "techniques/" + technique_id)
         if response.status_code == 200:
             technique = response.json()
         if response.status_code == 404:
             return abort(404, description="Technique not found")
-        # retrieve the incidents that use this technique
-        response = requests.get(BACKEND_ROOT + "neighbors/" + technique_id, params={"type": "intrusion-set"})
-        if response.status_code == 200:
-            incidents = response.json().get("objects", [])
     except:
         return abort(500, description="Error retrieving technique")
-    return render_template("technique.html", technique=technique, incidents=incidents)
+    return render_template("technique.html", technique=technique)
 
 @app.route('/api/threat-actors', methods=['GET'])
 def get_threat_actors():
@@ -443,18 +440,21 @@ def api_incident_detailed_bundle(incident_id):
 
     return jsonify(stix_bundle), 200
 
-@app.route('/api/threat-actor-details/<threat_actor_id>', methods=['GET'])
+@app.route('/api/threat-actor-details/<stix_id>', methods=['GET'])
 #@login_required
-def api_threat_actor_detailed_bundle(threat_actor_id):
+def api_object_neighbors(stix_id):
     incident_stix_bundle = {}
     try:
-        response = requests.get(BACKEND_ROOT + f"neighbors/{threat_actor_id}")
+        response = requests.get(BACKEND_ROOT + f"neighbors/{stix_id}")
         if response.status_code == 200:
             app.logger.info(response.json())
             stix_bundle = response.json()
+        if response.status_code == 404:
+            return abort(404, description="Threat actor not found")
     except:
         pass
     return jsonify(stix_bundle), 200
+
 
 @app.route("/api/top-threat-actors", methods=["GET"])
 def api_top_threat_actors():

@@ -374,6 +374,28 @@ def threat_actor(threat_actor_id):
     threat_actor.pop('_id', None)
     return jsonify(threat_actor), 200
 
+@app.route('/techniques', methods=['GET'])
+def techniques():
+    # Get the techniques from the DISARM matrix
+    techniques = []
+    for stix_object in disarm_stix2:
+        if stix_object["type"] == "attack-pattern":
+            techniques.append(stix_object)
+    bundle = Bundle(objects=techniques, allow_custom=True)
+    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
+
+@app.route('/techniques/<technique_id>', methods=['GET'])
+def technique(technique_id):
+    # Get the technique from the DISARM matrix
+    technique = None
+    for stix_object in disarm_stix2:
+        if stix_object["type"] == "attack-pattern" and stix_object["id"] == technique_id:
+            technique = stix_object
+            break
+    if not technique:
+        return jsonify({"message": "Technique not found"}), 404
+    return technique.serialize(), 200, {'Content-Type': 'application/json'}
+
 @app.route('/threat-actors/top', methods=['GET'])
 def top_threat_actors():
     limit = request.args.get('limit', default=10, type=int)

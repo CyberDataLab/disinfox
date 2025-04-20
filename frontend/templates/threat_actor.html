@@ -32,7 +32,7 @@
 
 <script>
     // Fetch the incidents where the threat actor is present
-    fetch(`{{ url_for('api_threat_actor_detailed_bundle', threat_actor_id=threat_actor.id) }}`)
+    fetch(`{{ url_for('api_object_neighbors', stix_id=threat_actor.id) }}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

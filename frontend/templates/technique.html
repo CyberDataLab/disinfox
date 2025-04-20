@@ -5,30 +5,86 @@
 <h1>{{ technique.name }}</h1>
 
 <div>
-    <div>
-        <b>Name:</b> {{technique.name}}
-    </div>
-    <div>
-        <b>Description:</b> {{technique.description}}
-    </div>
-    <div>
-        <b>Creation date:</b> {{technique.created}}
-    </div>
-    <div>
-        <b>Modification date:</b> {{technique.modified}}
+    <div class="d-flex">
+        <div class="flex-grow-1">
+            <div>
+                <b>Name:</b> {{ technique.name }}
+            </div>
+            <div>
+                <b>Description:</b> {{ technique.description }}
+            </div>
+            <div>
+                <b>Creation date:</b> {{ technique.created }}
+            </div>
+            <div>
+                <b>Modification date:</b> {{ technique.modified }}
+            </div>
+        </div>
+        <div class="ms-4">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>DISARM Reference</th>
+                        <th>DISARM Phase</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="{{ technique.external_references[0].url }}" target="_blank">
+                                {{ technique.external_references[0].external_id }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ technique.kill_chain_phases[0].phase_name }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     <hr>
     <div>
         <p><strong>🔎 Found in:</strong></p>
         <div id="taIncidents" class="d-flex flex-wrap">
-            {% for incident in incidents %}
-                <a href="{{ url_for('incident', incident_id=incident.id) }}" class="btn btn-primary me-2 mb-2 border border-primary-subtle">
-                    {{ incident.name }}
-                </a>
-            {% endfor %}
         </div>
     </div>
 </div>
 
 
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    // Fetch the incidents where the threat actor is present
+    fetch(`{{ url_for('api_object_neighbors', stix_id=technique.id) }}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Get the bundle related STIX objects
+            objects = data.objects;
+
+            // If the object is a intrusion-set, add it to the incidents
+            objects.forEach(object => {
+                if (object.type === 'intrusion-set') {
+                    const incidentLink = document.createElement('a');
+                    incidentLink.href = `{{ url_for('incident', incident_id='')}}${object.id}`;
+                    incidentLink.textContent = object.name;
+                    // Random color with a quarter of opacity 
+                    incidentLink.style.backgroundColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}40`;
+                    incidentLink.className = 'btn btn-primary me-2 mb-2 border border-primary-subtle';
+                    taIncidents.appendChild(incidentLink);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+</script>
+    
 {% endblock %}

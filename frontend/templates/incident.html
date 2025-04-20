@@ -528,11 +528,12 @@
                 for (const object of data.objects) {
                     //console.log(object);
                     if (object.type === "attack-pattern") {
-                        const btn = document.createElement("button");
+                        const btn = document.createElement("a");
                         // Random color for the button compatible with white letters
                         btn.style.backgroundColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}75`;
                         btn.className = "btn btn-secondary btn-sm me-2 my-1";
                         btn.innerText = object.name;
+                        btn.href = `{{ url_for('technique', technique_id='')}}${object.id}`;
                         document.getElementById("incidentTechniques").appendChild(btn);
                         // Increment the number of threat actors by 1
                         techniquesNumber += 1;
