@@ -56,7 +56,7 @@ class IncidentForm(FlaskForm):
     threat_actors = NonValidatingSelectField('Threat actors *', validators=[DataRequired()], coerce=str, id="threat_actors", render_kw={"multiple": "multiple"}, description="Select multiple threat actors, if unknown, select 'Unknown'")
     techniques = SelectMultipleField('Techniques', choices=displayed_techniques, coerce=str, id="techniques", render_kw={"multiple": "multiple"}, description="Select multiple techniques")
     # now the sources, when constructed, a list of strings will be passed
-    sources = NonValidatingSelectField('Sources *', choices=[], validators=[DataRequired()], coerce=str, id="sources", render_kw={"multiple": "multiple"}, description="Select multiple sources")
+    sources = NonValidatingSelectField('Sources', choices=[], coerce=str, id="sources", render_kw={"multiple": "multiple"}, description="Select multiple sources")
     submit = SubmitField('Submit Incident')
 
 class FileBulkIncidentForm(FlaskForm):
