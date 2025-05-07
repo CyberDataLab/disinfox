@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, abort
+from werkzeug.middleware.proxy_fix import ProxyFix
 import requests
 import pycountry
 import os
@@ -12,6 +13,9 @@ from models import User, Anonymous
 from datetime import timedelta
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,x_host=1, x_prefix=1
+)
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 bootstrap = Bootstrap5(app)
 login_manager = LoginManager()
