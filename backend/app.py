@@ -247,6 +247,63 @@ def get_incident(incident_id):
     incident.pop('_id', None)
     return jsonify(incident), 200
 
+@app.route('/incidents/<incident_id>/related', methods=['GET'])
+def related_incidents(incident_id):
+    # Obtener el incidente central
+    central = stix2_objects.find_one({"id": incident_id, "type": "intrusion-set"})
+    if not central:
+        return jsonify({"message": "Incident not found"}), 404
+
+    # getting the direct relationships of the central incident
+    relationships = list(stix2_objects.find({"$or": [{"source_ref": incident_id}, {"target_ref": incident_id}], "type": "relationship"}))
+
+    # target_ref is the id of the object that is directly related to the incident
+    # these will shared with the other related incidents
+    shared_objects = {}
+    for rel in relationships:
+        # Get the object id that is related to the incident (the id in the relationship that is not central incident)
+        shared_object_id = rel["target_ref"] if rel["source_ref"] == incident_id else rel["source_ref"]
+        # maybe the shared object is already in the list
+        if shared_object_id in shared_objects:
+            continue
+        shared_object = stix2_objects.find_one({"id": shared_object_id})
+        if not shared_object:
+            continue
+        shared_objects[shared_object_id] = {
+            "id": shared_object["id"],
+            "type": shared_object["type"],
+            "name": shared_object.get("name", "Unnamed"),
+        }
+
+    # search the relationships of the shared objects
+    related = {}
+    for obj_id in shared_objects.keys():
+        # search for direct relationships of the shared object
+        rels = list(stix2_objects.find({"$or": [{"source_ref": obj_id}, {"target_ref": obj_id}], "type": "relationship"}))
+        for rel in rels:
+            # Get the object id that is related to the shared object (the id of the relationship that is not shared object)
+            related_incident_id = rel["target_ref"] if rel["source_ref"] == obj_id else rel["source_ref"]
+            # Check if the relationship is not the central incident
+            if related_incident_id == incident_id:
+                continue
+            related_obj = stix2_objects.find_one({"id": related_incident_id})
+            if not related_obj:
+                continue
+            if related_obj["id"] in related:
+                related[related_obj["id"]]["shared_with"][obj_id] = shared_objects[obj_id]
+                continue
+            related[related_obj["id"]] = {
+                "id": related_obj["id"],
+                "type": related_obj["type"],
+                "name": related_obj.get("name", "Unnamed"),
+                "shared_with": {obj_id: shared_objects[obj_id]},
+            }
+
+    return jsonify(list(related.values())), 200
+
+
+def are_incidents_related(incident1_bundle, incident2_bundle):
+    pass
 
 @app.route('/bulk-incident', methods=['POST'])
 def save_bulk_incidents():
@@ -304,6 +361,10 @@ def save_bulk_incidents():
 
 @app.route('/neighbors/<stix_id>', methods=['GET'])
 def neighbors(stix_id):
+    bundle = search_neighbors(stix_id)
+    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
+
+def search_neighbors(stix_id):
     related_objects = []
 
     # Fetch the incident from the database
@@ -318,15 +379,15 @@ def neighbors(stix_id):
     relationships = stix2_objects.find({"$or": [{"source_ref": stix_id}, {"target_ref": stix_id}]})
     # Get the other objects related to the incident
     for relationship in relationships:
-        app.logger.info(f"Appending relationship: {relationship['id']}")
+        #app.logger.info(f"Appending relationship: {relationship['id']}")
         # Just search the objects that are not already in the related_objects list (we alredy appended them)
         # Degug this
-        app.logger.info(f"Checking if {relationship['source_ref']} is in related_objects: {any(obj['id'] == relationship['source_ref'] for obj in related_objects)}")
+        #app.logger.info(f"Checking if {relationship['source_ref']} is in related_objects: {any(obj['id'] == relationship['source_ref'] for obj in related_objects)}")
         if relationship["source_ref"] and not any(obj["id"] == relationship["source_ref"] for obj in related_objects):
             source_obj = stix2_objects.find_one({"id": relationship["source_ref"]})
             source_obj.pop('_id', None)
             related_objects.append(source_obj)
-        app.logger.info(f"Checking if {relationship['target_ref']} is in related_objects: {any(obj['id'] == relationship['target_ref'] for obj in related_objects)}")
+        #app.logger.info(f"Checking if {relationship['target_ref']} is in related_objects: {any(obj['id'] == relationship['target_ref'] for obj in related_objects)}")
         if relationship["target_ref"] and not any(obj["id"] == relationship["target_ref"] for obj in related_objects):
             target_obj = stix2_objects.find_one({"id": relationship["target_ref"]})
             target_obj.pop('_id', None)
@@ -343,7 +404,7 @@ def neighbors(stix_id):
             related_objects.append(creator)
 
     bundle = Bundle(objects=related_objects, allow_custom=True)
-    return bundle.serialize(), 200, {'Content-Type': 'application/json'}
+    return bundle
 
 @app.route('/threat-actors', methods=['GET','POST'])
 def threat_actors():

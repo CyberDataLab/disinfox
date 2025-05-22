@@ -77,7 +77,8 @@ The **Incidents** page provides a structured view of all reported disinformation
 ![DISINFOX disinformation incident listing](imgs/listing.png)
 
 Clicking on an incident reveals details such as:  
-✔️ Title & description  
+✔️ Title & description
+✔️ Other incidents related to the same campaign
 ✔️ Threat actor & affected countries  
 ✔️ Identified **DISARM TTPs**  
 ✔️ Interactive **STIX2 graph visualization**  

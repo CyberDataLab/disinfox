@@ -235,7 +235,7 @@
             <strong>📝 Description:</strong>
             <p><span id="incidentDescription"> {{ incident.description }} </span></p>
         </div>
-        <div class="me-3">
+        <div class="">
             <div><strong>📅 Date & time:</strong></div>
             <div class="text-end">
                 <div class="">
@@ -255,8 +255,16 @@
         </div>
     </div>
     <div>
-
-
+    <hr>
+        <strong>🕵️‍♂️ Related incidents:</strong>
+        <div class="d-flex justify-content-between">
+            <div id="relatedIncidents" class=""></div>
+            <!-- Huge rectable to show the number of threat actors -->
+            <div class="w-25 text-center bg-danger border border-danger rounded-3 p-1 align-self-center">
+                <div id="relatedIncidentsNumber" class="fs-3">0</div>
+                <div>Related incidents</div>
+            </div>
+        </div>
     </div>
     <hr>
     <!-- Dynamic fields populated by AJAX -->
@@ -371,6 +379,7 @@
     let currentIncidentId = null;
     // When page loads, load details of the first incident
     loadIncidentDetails("{{ incident.id }}");
+    loadRelatedIncidents("{{ incident.id }}");
 
     function initializeMap() {
         // Initialize map with Leaflet
@@ -585,6 +594,90 @@
 
     }
 
+    function loadRelatedIncidents(incidentId) {
+        // AJAX request to get related incidents
+        fetch(`{{ url_for('api_related_incidents', incident_id=incident.id) }}`)
+            .then(response => {
+                if (!response.ok) {
+                    document.getElementById("relatedIncidents").innerHTML = "Could not load related incidents";
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Populate modal fields with the data from the response
+                const relatedIncidentsDiv = document.getElementById("relatedIncidents");
+                relatedIncidentsDiv.innerHTML = ""; // Clear previous content
+                data.forEach(incident => {
+                    const incidentId = incident.id
+                    const incidentName = incident.name
+                    const sharedObjects = incident.shared_with
+                    const count = incident.shared_with_count
+                    // The related incidents have the name and the count in a badge all in a button that drops down to show the shared objects
+                    const btnGroup = document.createElement("div");
+                    btnGroup.className = "btn-group me-2 my-1";
+
+                    // Main dropdown button
+                    const btn = document.createElement("button");
+                    btn.className = "btn btn-secondary btn-sm dropdown-toggle";
+                    btn.style.backgroundColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}75`;
+                    btn.setAttribute("data-bs-toggle", "dropdown");
+                    btn.setAttribute("aria-expanded", "false");
+                    // The count should be in a badge
+                    const badge = document.createElement("span");
+                    badge.className = "badge bg-primary rounded-pill ms-2";
+                    badge.innerText = count;
+                    btn.innerText = incidentName;
+                    btn.appendChild(badge);
+
+                    // New window button
+                    const newWindowBtn = document.createElement("a");
+                    newWindowBtn.className = "btn btn-outline-secondary btn-sm";
+                    newWindowBtn.href = `{{ url_for('incident', incident_id='')}}${incidentId}`;
+                    newWindowBtn.target = "_blank";
+                    newWindowBtn.title = "Open incident in new window";
+                    newWindowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
+                        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
+                        </svg>`;
+
+                    // Create a dropdown menu to show the shared objects
+                    const dropdownMenu = document.createElement("ul");
+                    dropdownMenu.className = "dropdown-menu";
+                    // Iterate over the shared objects and create a list item for each one
+                    for (var sharedObjectKey in sharedObjects) {
+                        const types = {
+                            "location": "📍", 
+                            "threat-actor": "🥷",
+                            "attack-pattern": "🔪",
+                        }
+                        const sharedObject = sharedObjects[sharedObjectKey];
+                        const listItem = document.createElement("li");
+                        const link = document.createElement("a");
+                        link.className = "dropdown-item";
+                        link.innerText = `${types[sharedObject.type]} ${sharedObject.name}`;
+                        link.href = `{{ url_for('incident', incident_id='')}}${sharedObject.id}`;
+                        listItem.appendChild(link);
+                        dropdownMenu.appendChild(listItem);
+                    };
+
+                    // Append the dropdown menu to the button group
+                    btnGroup.appendChild(newWindowBtn);
+                    btnGroup.appendChild(btn);
+                    btnGroup.appendChild(dropdownMenu);
+
+                    // Append the button group to the related incidents div
+                    relatedIncidentsDiv.appendChild(btnGroup);
+                    // Update the number of related incidents
+                    const relatedIncidentsNumber = document.getElementById("relatedIncidentsNumber");
+                    relatedIncidentsNumber.innerText = data.length;
+
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching related incidents:", error);
+            });
+    }
     function copyToClipboard() {
         const stixContent = document.getElementById("incidentRawStix2").innerText;
         navigator.clipboard.writeText(stixContent).then(() => {

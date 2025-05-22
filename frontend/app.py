@@ -466,7 +466,6 @@ def api_top_threat_actors():
         app.logger.info("Getting top threat actors")
         response = requests.get(BACKEND_ROOT + "threat-actors/top", params={"limit": 10})
         if response.status_code == 200:
-            app.logger.info(response.json())
             return jsonify(response.json()), 200
     except:
         pass
@@ -478,7 +477,6 @@ def api_top_locations():
         app.logger.info("Getting top locations")
         response = requests.get(BACKEND_ROOT + "locations/top", params={"limit": 10})
         if response.status_code == 200:
-            app.logger.info(response.json())
             return jsonify(response.json()), 200
     except:
         pass
@@ -490,8 +488,31 @@ def api_latest_incidents():
         app.logger.info("Getting last incidents")
         response = requests.get(BACKEND_ROOT + "incidents", params={"limit": 5})
         if response.status_code == 200:
-            app.logger.info(response.json().get("incidents", []))
             return jsonify(response.json().get("incidents", [])), 200
+    except:
+        pass
+    return jsonify([]), 500
+
+@app.route("/api/related_incidents/<incident_id>", methods=["GET"])
+def api_related_incidents(incident_id):
+    try:
+        response = requests.get(BACKEND_ROOT+"incidents/"+incident_id+"/related")
+        if response.status_code != 200:
+            return jsonify([]), 500
+        summarized_response = []
+        for incident in response.json():
+            shared_objects_count = len(incident.get("shared_with", {}))
+            if shared_objects_count < 3:
+                continue      
+            summarized_response.append({
+                "id": incident["id"],
+                "name": incident["name"],
+                "shared_with": incident.get("shared_with", {}),
+                "shared_with_count": shared_objects_count
+            })
+        # sort by shared_with_count
+        summarized_response = sorted(summarized_response, key=lambda x: x["shared_with_count"], reverse=True)
+        return jsonify(summarized_response), 200
     except:
         pass
     return jsonify([]), 500
