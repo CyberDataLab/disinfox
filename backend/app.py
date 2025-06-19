@@ -53,6 +53,12 @@ if not disarm_stix2:
 
 disarm_stix2 = disarm_stix2['objects'] # Get the objects from the bundle
 
+@app.before_request
+def before_request():
+    if environ.get("READONLY", 0) and request.method != 'GET':
+        app.logger.warning(f"Blocked {request.method} to {request.path} in READONLY mode")
+        abort(500, description="Server in READONLY mode. Operation not permitted.")
+
 
 # Root informative endpoint
 @app.route('/', methods=['GET'])

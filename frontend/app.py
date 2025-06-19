@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, abort
+from flask import Flask, render_template, request, jsonify, redirect, url_for, abort, flash
 from werkzeug.middleware.proxy_fix import ProxyFix
 import requests
 import pycountry
@@ -11,6 +11,7 @@ from incident_export import export_incident_to_pdf, export_incident_to_word
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from models import User, Anonymous
 from datetime import timedelta
+from functools import wraps
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(
@@ -21,8 +22,10 @@ bootstrap = Bootstrap5(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-app.config["READONLY"] = os.environ.get("READONLY", "False") == "True"
-
+app.config["READONLY"] = os.environ.get("READONLY", 0)
+if app.config["READONLY"]:
+    app.logger.warning("Running in read-only mode. No modifications allowed.")
+    
 
 BACKEND_ROOT = f"http://{os.environ.get('BACKEND_HOST', 'localhost')}:{os.environ.get('BACKEND_PORT', '5000')}/"
 LISTING_LIMIT = 50
@@ -44,9 +47,19 @@ if not alive:
 
 login_manager.anonymous_user = Anonymous
 
+def readonly_guard(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if app.config.get("READONLY", 0):
+            app.logger.warning("Read-only mode enabled. Redirecting to home.")
+            flash("The application is currently in read-only mode. No modifications are allowed.", "warning")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.errorhandler(500)
 def internal_server_error(e):
-    if app.config["READONLY"]:
+    if app.config.get("READONLY", 0):
         return render_template("500readonly.html"), 500
     else:
         return jsonify(error=str(e)), 500
@@ -66,6 +79,7 @@ def home():
     return render_template("index.html", last_update=os.environ.get("LAST_UPDATE"))
 
 @app.route("/register", methods=["GET", "POST"])
+@readonly_guard
 def register():
     register_form = RegisterForm()
     if request.method == "GET":
@@ -78,8 +92,9 @@ def register():
         return redirect(url_for("login"), code=302)
     else:
         return "Error registering", 500
-    
+
 @app.route("/login", methods=["GET", "POST"])
+@readonly_guard
 def login():
     login_form = LoginForm()
     if request.method == "GET":
@@ -123,7 +138,9 @@ def profile():
         response = requests.get(BACKEND_ROOT + "incidents/" + incident_id)
         if response.status_code == 200:
             uploaded_incidents.append(response.json())
-    return render_template("profile.html", user=user_data, favorites=favorites , uploaded_incidents=uploaded_incidents)
+    return render_template("profile.html", 
+                           user=user_data, favorites=favorites , uploaded_incidents=uploaded_incidents, 
+                           api_key=user_data.get("api_key", os.environ.get("API_KEY_READONLY", "API Key not available, contact the administrator to get one.")))
 
 @app.route("/profile/delete", methods=["POST"])
 @login_required
@@ -236,6 +253,7 @@ def new_incident():
         return abort(500, description="Error creating incident")
     
 @app.route("/incidents/new/autocomplete", methods=["POST"])
+@login_required
 def autocomplete():
     file = request.files.get("file")
     source_file_form = FileSourceForm()
@@ -357,8 +375,8 @@ def search_incidents():
     return render_template("search.html", query=query,
                             incidents=incidents_response.get("incidents", []),
                             npages=npages, page=page, total_incidents=total_incidents, max_selectable_pages=MAX_INDIVIDUAL_SELECTABLE_PAGES)
+
 @app.route("/threat-actors/", methods=["GET", "POST"])
-#@login_required
 def threat_actors():
     if request.method == "GET":
         page = request.args.get("page", 1, type=int)
@@ -373,7 +391,6 @@ def threat_actors():
     return "Not implemented", 400
 
 @app.route("/threat-actors/<ta_id>",  methods=["GET"])
-#@login_required
 def threat_actor(ta_id):
     response = requests.get(BACKEND_ROOT + "threat-actors/" + ta_id)
     if response.status_code != 200:

@@ -31,7 +31,7 @@
         <form action="{{ url_for('generate_api_key') }}" method="post">
             <div class="d-flex flex-column">
                 <div class="d-inline-flex align-items-center">
-                    <input type="text" class="form-control me-3" disabled="true" value="{{ user.api_key }}" readonly>
+                    <input type="text" class="form-control me-3" disabled="true" value="{{ api_key }}" readonly>
                     <button type="submit" class="btn btn-primary">
                         Generate
                     </button>

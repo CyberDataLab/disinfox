@@ -23,9 +23,7 @@ services:
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
       - TEST_USER_EMAIL=${TEST_USER_EMAIL}
       - TEST_USER_PASSWORD=${TEST_USER_PASSWORD}
-      - READONLY=True
-      # we set a different app.py file for the readonly version
-      - FLASK_APP=app_readonly.py
+      - READONLY=1
       - FLASK_DEBUG=1
       - API_KEY_READONLY=${API_KEY_READONLY}
     volumes:
@@ -43,8 +41,7 @@ services:
       - BACKEND_HOST=backend
       - BACKEND_PORT=5000
       - LAST_UPDATE=${LAST_COMMIT}
-      - READONLY=True
-      - FLASK_APP=app_readonly.py
+      - READONLY=1
       - FLASK_DEBUG=1
       - API_KEY_READONLY=${API_KEY_READONLY}
       - SECRET_KEY=${FRONTEND_SECRET_KEY}

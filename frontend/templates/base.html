@@ -125,6 +125,31 @@
             });
         });
     </script>
+<script src="
+https://cdn.jsdelivr.net/npm/sweetalert2@11.22.0/dist/sweetalert2.all.min.js
+"></script>
+<link href="
+https://cdn.jsdelivr.net/npm/sweetalert2@11.22.0/dist/sweetalert2.min.css
+" rel="stylesheet">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+            {% for category, message in messages %}
+                Swal.fire({
+                    title: "{{ category.capitalize() }}",
+                    text: "{{ message }}",
+                    icon: "{{ category }}",
+                    button: "OK",
+                    theme: "dark",
+                    customClass: {
+                        confirmButton: "btn btn-primary"
+                    }
+                });
+            {% endfor %}
+            </script>
+        {% endif %}
+    {% endwith %}
+
     
     {% block scripts %}{% endblock %}
 </body>
