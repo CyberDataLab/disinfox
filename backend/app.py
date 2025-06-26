@@ -55,7 +55,9 @@ disarm_stix2 = disarm_stix2['objects'] # Get the objects from the bundle
 
 @app.before_request
 def before_request():
-    if environ.get("READONLY", 0) and request.method != 'GET':
+    # block if the server is in READONLY mode and the request is not a GET or is not a valid API key check
+
+    if environ.get("READONLY", 0) and request.method != 'GET' and not request.path in ['/check-api-key']:
         app.logger.warning(f"Blocked {request.method} to {request.path} in READONLY mode")
         abort(500, description="Server in READONLY mode. Operation not permitted.")
 
@@ -186,13 +188,30 @@ def check_api_key():
     if not api_key:
         app.logger.info("No API key provided")
         return jsonify({'message': 'Please provide the api_key parameter'}), 400
-    separated_key = api_key.split(API_KEY_SEPARATOR)
-    user = users.find_one({"email": b64decode(separated_key[1]).decode('utf-8')})
-    app.logger.info(f"API user found: {user}, comparing {separated_key[0]} with {API_KEY_IDENTIFIER} and {user['api_key']} with {separated_key[2]}")
 
-    if not API_KEY_IDENTIFIER == separated_key[0] or not user or not user["api_key"] == api_key:
+    # If we are in readonly mode, we check against the hardcoded API key
+    valid_key = None
+    if environ.get("READONLY", 0):
+        app.logger.info("Server in READONLY mode, checking against hardcoded API key")
+        readonlymode_api_key = environ.get("API_KEY_READONLY")
+        valid_key = readonlymode_api_key
+        if not readonlymode_api_key:
+            app.logger.info("No API Key configured for READONLY mode, public API access is not allowed")
+            return jsonify({"message": "Public API access is not allowed"}), 403
+    else:    
+        separated_key = api_key.split(API_KEY_SEPARATOR)
+        user = users.find_one({"email": b64decode(separated_key[1]).decode('utf-8')})
+        valid_key = user.get("api_key")
+        app.logger.info(f"API user found: {user}, comparing {separated_key[0]} with {API_KEY_IDENTIFIER} and {user['api_key']} with {separated_key[2]}")
+        if not API_KEY_IDENTIFIER == separated_key[0] or not user:
+            return jsonify({"message": "Invalid API key"}), 401
+    
+    if valid_key and valid_key == api_key:
+        app.logger.info("API key is valid")
+        return jsonify({"message": "Valid API key"}), 200
+    else:
+        app.logger.info("API key is invalid")
         return jsonify({"message": "Invalid API key"}), 401
-    return jsonify({"message": "Valid API key"}), 200
 
 
 # Incident upload endpoint
