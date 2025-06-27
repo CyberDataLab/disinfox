@@ -211,6 +211,11 @@ def incident(incident_id):
 @app.route("/incidents/new", methods=["GET", "POST"])
 @login_required
 def new_incident():
+    app.logger.info("Creating new incident. Verification required: " + str(os.environ.get("VERIFICATION_REQUIRED", 0) + " Current user verified: " + str(current_user.verified)))
+    app.logger.info("Condition: " + str(os.environ.get("VERIFICATION_REQUIRED", 0) == 1 and not current_user.verified))
+    if os.environ.get("VERIFICATION_REQUIRED", 0) and not current_user.verified:
+        flash("Your profile needs to be verified before you can create incidents.", "warning")
+        return redirect(url_for("profile"), code=302)
     incident_form = IncidentForm()
     bulk_file_form = FileBulkIncidentForm()
     source_file_form = FileSourceForm()

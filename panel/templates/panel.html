@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">User Management</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Email</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user['email'] }}</td>
+                    <td>{{ user['firstName'] }} {{ user['lastName'] }}</td>
+                    <td>
+                        {% if user['verified'] %}
+                            <span class="badge bg-success">Verified</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Unverified</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="{{ url_for('verify_user', user_id=user['email']) }}" class="d-inline">
+                            {% if not user['verified'] %}
+                                <input type="hidden" name="verify" value="true">
+                                <button type="submit" class="btn btn-sm btn-primary">Verify</button>
+                            {% else %}
+                                <input type="hidden" name="verify" value="false">
+                                <button type="submit" class="btn btn-sm btn-warning">Unverify</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if users|length == 0 %}
+            <div class="alert alert-info mt-3" role="alert">
+                No users found.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

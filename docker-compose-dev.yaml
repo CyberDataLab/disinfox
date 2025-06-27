@@ -38,8 +38,8 @@ services:
       - MONGODB_DB=${MONGODB_DB}
       - MONGODB_USERNAME=${MONGODB_USERNAME}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
-      - TEST_USER_EMAIL=${TEST_USER_EMAIL}
-      - TEST_USER_PASSWORD=${TEST_USER_PASSWORD}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - FLASK_DEBUG=1
     volumes:
       - ./backend:/app
@@ -58,6 +58,7 @@ services:
       - LAST_UPDATE=${LAST_COMMIT}
       - FLASK_DEBUG=1
       - SECRET_KEY=${FRONTEND_SECRET_KEY}
+      - VERIFICATION_REQUIRED=${VERIFICATION_REQUIRED} # New environment variable for email verification
     volumes:
       - ./frontend:/app
 
@@ -74,6 +75,20 @@ services:
       - FLASK_DEBUG=1
     volumes:
       - ./public-api:/app
+
+  panel:
+    build: ./panel
+    ports:
+      - "5001:5000"
+    depends_on:
+      - backend
+    restart: always # this prevents a startup failure (becouse of backend not being ready)
+    environment:
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=5000
+      - FLASK_DEBUG=1
+    volumes:
+      - ./panel:/app
 
 
 volumes:

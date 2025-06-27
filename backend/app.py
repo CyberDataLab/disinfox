@@ -87,6 +87,7 @@ def register():
     user_data["favoriteIncidents"] = []
     user_data["createdIncidents"] = []
     user_data["api_key"] = build_api_key(email)
+    user_data["verified"] = False  # New users are not verified by default
     # Insert the user in the database
     users.insert_one(user_data)
     return jsonify({"message": "User registered successfully"}), 201
@@ -104,11 +105,37 @@ def login():
     user = users.find_one({"email":email})
     if not user:
         return jsonify({"message": "Invalid credentials"}), 401
-    # Check the password
+    # Print info about the user
+    app.logger.info(f"User found: {user}")
     if bcrypt.checkpw(password.encode('utf-8'), user["password"]):
         return jsonify({"message": "Login successful"}), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    # Return all users with all their information except sensitive fields
+    users_list = list(users.find({}, {"_id": 0, "password": 0}))
+    return jsonify(users_list), 200
+
+@app.route('/users/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    # Update all information about the user (except email and password)
+    data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided"}), 400
+
+    user = users.find_one({"email": user_id})
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Prevent updating email and password directly
+    data.pop("email", None)
+    data.pop("password", None)
+
+    users.update_one({"email": user_id}, {"$set": data})
+    return jsonify({"message": "User updated successfully"}), 200
+
 
 @app.route('/users/<user_id>', methods=['GET'])
 def get_user(user_id):

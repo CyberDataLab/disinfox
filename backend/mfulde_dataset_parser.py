@@ -30,7 +30,7 @@ def build_objects(csv_df):
             date = '0000-01-01'
         else:
             date = str(int(year))+ '-01-01'
-        target_country = str(row['Target Country']) 
+        target_country = str(row['Target Country']).replace('*', '').strip()
         event = row['Event']
         region = row['Region']
         sub_region = row['Sub-region']

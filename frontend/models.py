@@ -32,11 +32,11 @@ class Anonymous(AnonymousUserMixin):
         }
 
 class User(UserMixin):
-    def __init__(self, email, first_name=None, last_name=None):
+    def __init__(self, email, first_name=None, last_name=None, verified=False):
         self.email = email
         self.firstName = first_name
         self.lastName = last_name
-
+        self.verified = verified
     def __repr__(self):
         return f'<User {self.username}>'
     
@@ -48,6 +48,6 @@ class User(UserMixin):
         response = requests.get(f"{api_user_root}{user_id}")
         if response.status_code == 200:
             user_data = response.json()
-            return User(user_data["email"], user_data["firstName"], user_data["lastName"])
+            return User(user_data["email"], user_data["firstName"], user_data["lastName"], user_data["verified"])
         else:
             return None

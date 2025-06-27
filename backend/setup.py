@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # Check if the test user is already registered
     try:
-        response = requests.get(BACKEND_ROOT + 'users/' + os.environ['TEST_USER_EMAIL'])
+        response = requests.get(BACKEND_ROOT + 'users/' + os.environ['ADMIN_EMAIL'])
         if response.status_code == 200:
             print("[SETUP] Test user already registered... skipping registration")
             exit(0)
@@ -44,10 +44,11 @@ if __name__ == '__main__':
     # Register a test user
     try:
         response = requests.post(BACKEND_ROOT + 'register', json={
-            'email': os.environ['TEST_USER_EMAIL'], 
-            'password': os.environ['TEST_USER_PASSWORD'],
+            'email': os.environ['ADMIN_EMAIL'], 
+            'password': os.environ['ADMIN_PASSWORD'],
             'firstName': 'Test',
-            'lastName': 'User'
+            'lastName': 'User',
+            'isAdmin': True
         })
         response.raise_for_status()
     except Exception as e:
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     try:
         response = requests.post(BACKEND_ROOT + 'bulk-incident',
                                 files={'file': ('incidents.json', Bundle(objects=[identity]).serialize(), 'application/json')},
-                                data={"user": os.environ['TEST_USER_EMAIL']}
+                                data={"user": os.environ['ADMIN_EMAIL']}
                                 )
         response.raise_for_status()
     except Exception as e:
@@ -92,7 +93,7 @@ if __name__ == '__main__':
                 content_type = 'application/json' if extension == 'json' else 'text/csv'
                 response = requests.post(BACKEND_ROOT + 'bulk-incident', 
                                         files={'file': ('incidents.' + extension, incidents, content_type)},
-                                        data={"user": os.environ['TEST_USER_EMAIL']})
+                                        data={"user": os.environ['ADMIN_EMAIL']})
 
                 response.raise_for_status()
     except Exception as e:

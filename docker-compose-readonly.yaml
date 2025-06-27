@@ -19,8 +19,8 @@ services:
       - MONGODB_DB=${MONGODB_DB}
       - MONGODB_USERNAME=${MONGODB_USERNAME}
       - MONGODB_PASSWORD=${MONGODB_PASSWORD}
-      - TEST_USER_EMAIL=${TEST_USER_EMAIL}
-      - TEST_USER_PASSWORD=${TEST_USER_PASSWORD}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - READONLY=1
       # we set a different app.py file for the readonly version
       - API_KEY_READONLY=${API_KEY_READONLY}
@@ -41,6 +41,7 @@ services:
       - READONLY=1
       - API_KEY_READONLY=${API_KEY_READONLY}
       - SECRET_KEY=${FRONTEND_SECRET_KEY}
+      - VERIFICATION_REQUIRED=${VERIFICATION_REQUIRED} # New environment variable for email verification
 
 
   public-api:
