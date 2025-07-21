@@ -1,0 +1,31 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Toward interoperable representation and sharing of
+  disinformation incidents in cyber threat intelligence
+message: 'If you use this software, please cite the following paper:'
+type: software
+authors:
+  - family-names: Sánchez González
+    given-names: Felipe
+  - family-names: Pastor-Galindo
+    given-names: Javier
+  - family-names: Ruipérez-Valiente
+    given-names: José Antonio
+identifiers:
+  - type: doi
+    value: 10.48550/arXiv.2502.20997
+    description: arXiv
+repository-code: 'https://github.com/CyberDataLab/disinfox'
+url: 'https://arxiv.org/abs/2502.20997'
+keywords:
+  - disinformation
+  - cti
+  - disarm
+  - influence operations
+  - fimi
+version: 1.0.0
+date-released: '2025-02-27'
+
